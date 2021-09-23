@@ -120,6 +120,10 @@ def jscFlavor = 'org.webkit:android-jsc:+'
  */
 def enableHermes = project.ext.react.get("enableHermes", false);
 
+def apikeyPropertiesFile = rootProject.file("apikey.properties")
+def apikeyProperties = new Properties()
+apikeyProperties.load(new FileInputStream(apikeyPropertiesFile))
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -131,6 +135,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        buildConfigField("String", "CLIENT_SERVER_ID", apikeyProperties['CLIENT_SERVER_ID'])
     }
     splits {
         abi {
@@ -205,6 +210,8 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.0.0' // <-- add this; newer versions should work too
 }
 
 // Run this once to be able to run the application with BUCK
@@ -215,3 +222,4 @@ task copyDownloadableDepsToLibs(type: Copy) {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+apply plugin: 'com.google.gms.google-services' // <--- this should be the last line
