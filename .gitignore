@@ -28,6 +28,7 @@ build/
 .gradle
 local.properties
 *.iml
+/android/
 
 # node.js
 #
@@ -62,4 +63,4 @@ buck-out/
 android/apikey.properties
 
 # Android memory profiler files
-*.hprof
+.hprof
