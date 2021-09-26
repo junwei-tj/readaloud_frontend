@@ -62,4 +62,4 @@ buck-out/
 android/apikey.properties
 
 # Android memory profiler files
-.hprof
+*.hprof
