@@ -6,6 +6,8 @@ import {
   Button,
   View,
   useColorScheme,
+  StyleSheet,
+  Image,
 } from 'react-native';
 import {
   GoogleSignin,
@@ -14,6 +16,33 @@ import {
 } from '@react-native-google-signin/google-signin';
 
 import { UserContext } from '../App';
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: {
+    height: '25%',
+    resizeMode: 'contain',
+  },
+  title: {
+    fontFamily: 'sans-serif-light',
+    fontWeight: 'bold',
+    fontSize: 48,
+  },
+  caption: {
+    fontStyle: 'italic',
+    fontSize: 24,
+  },
+  signInButton: { 
+    width: '60%', 
+    height: 48,
+    marginTop: 128, 
+  }
+});
 
 GoogleSignin.configure(); // mandatory to call this method before attempting to call signIn() and signInSilently()
 
@@ -25,23 +54,17 @@ export default function Login({ navigation }) {
   // };
 
   const { setSignedIn, setUserInfo } = useContext(UserContext);
-  const [signingIn, setSigningIn] = useState(false);
-
 
   const signIn = async (navigation) => {
     try {
       await GoogleSignin.hasPlayServices();
-      setSigningIn(true);
       const userInfo = await GoogleSignin.signIn();
       setUserInfo(userInfo);
       setSignedIn(true);
-      setSigningIn(false);
-      console.log(userInfo);
       navigation.replace("Home")
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled the login flow
-        alert('Cancel');
       } else if (error.code === statusCodes.IN_PROGRESS) {
         alert('Signin in progress');
         // operation (f.e. sign in) is in progress already
@@ -50,6 +73,7 @@ export default function Login({ navigation }) {
         // play services not available or outdated
       } else {
         // some other error happened
+        console.log(error);
       }
     }
   };
@@ -57,14 +81,15 @@ export default function Login({ navigation }) {
   return (
     <SafeAreaView>
       <StatusBar barStyle="dark-content" />
-      <View style={{ alignItems: 'center' }}>
-        <Text>Login Screen</Text>
+      <View style={styles.container}>
+        <Image style={styles.logo} source={require("../images/audiobook.png")} />
+        <Text style={styles.title}>ReadAloud</Text>
+        <Text style={styles.caption}>Audiobooks Made Easy</Text>
         <GoogleSigninButton
-          style={{ width: 256, height: 48 }}
+          style={styles.signInButton}
           size={GoogleSigninButton.Size.Wide}
           color={GoogleSigninButton.Color.Dark}
           onPress={() => signIn(navigation)}
-          disabled={signingIn}
         />        
       </View>
     </SafeAreaView>
