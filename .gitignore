@@ -60,3 +60,6 @@ buck-out/
 
 # Custom
 android/apikey.properties
+
+# Android memory profiler files
+*.hprof
