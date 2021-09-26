@@ -29,9 +29,13 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   title: {
-    fontFamily: 'sans-serif-light',
-    fontWeight: 'bold',
-    fontSize: 48,
+    // fontFamily: 'sans-serif-light',
+    // fontWeight: 'bold',
+    // fontSize: 48,
+    ...Platform.select({
+      ios: { fontFamily: 'helvetica',fontWeight: 'bold',fontSize: 48, }, 
+      android: { fontFamily: 'sans-serif-light',fontWeight: 'bold',fontSize: 48, }
+ })
   },
   caption: {
     fontStyle: 'italic',
