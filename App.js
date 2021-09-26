@@ -26,23 +26,21 @@ export default function App() {
     });
 
     // check if user is signed in
+    const isSignedIn = async () => {
+      const isSignedIn = await GoogleSignin.isSignedIn();
+      if (isSignedIn) {
+        const currentUser = await GoogleSignin.getCurrentUser();
+        setSignedIn(true);
+        setUserInfo(currentUser);
+      }
+    };
     isSignedIn();
   }, []);
-
-  const isSignedIn = async () => {
-    const isSignedIn = await GoogleSignin.isSignedIn();
-    if (isSignedIn) {
-      const currentUser = await GoogleSignin.getCurrentUser();
-      setSignedIn(true);
-      setUserInfo(currentUser);
-      console.log(currentUser);
-    }
-  };
 
   return (
     <UserContext.Provider value={{ signedIn, setSignedIn, userInfo, setUserInfo }}>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName={isSignedIn ? "Home" : "Login"}>
+        <Stack.Navigator initialRouteName={signedIn ? "Home" : "Login"}>
           <Stack.Screen
             name="Home"
             component={HomeScreen}
@@ -51,7 +49,7 @@ export default function App() {
           <Stack.Screen
             name="Login"
             component={LoginScreen}
-            options={{title: 'Login'}}
+            options={{headerShown: false}}
           />
           <Stack.Screen name="PlayAudio" component={PlayAudioScreen} />
         </Stack.Navigator>
