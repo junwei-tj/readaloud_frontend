@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, {useContext} from 'react';
 import {
   SafeAreaView,
   StatusBar,
@@ -9,18 +9,17 @@ import {
   useColorScheme,
 } from 'react-native';
 
-import { UserContext } from '../App';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import {UserContext} from '../App';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
-export default function SettingsScreen({ navigation }) {
-
+export default function SettingsScreen({navigation}) {
   const isDarkMode = useColorScheme() === 'dark';
 
   // const backgroundStyle = {
   //   backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   // };
 
-  const { setSignedIn, userInfo, setUserInfo } = useContext(UserContext);
+  const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
 
   const signOut = async () => {
     try {
@@ -36,17 +35,13 @@ export default function SettingsScreen({ navigation }) {
   console.log(userInfo);
 
   return (
-    
     <SafeAreaView>
-      <StatusBar barStyle='dark-content' />
-      <View style={{ alignItems: 'center' }}>
-        
+      <StatusBar barStyle="dark-content" />
+      <View style={{alignItems: 'center'}}>
         <Text>Settings Screen</Text>
-        <Button
-          onPress={signOut}
-          title="LogOut"
-          color="red"
-        />
+
+        <Text>{userInfo.user.email}</Text>
+        <Button onPress={signOut} title="LogOut" color="red" />
       </View>
     </SafeAreaView>
   );
@@ -56,7 +51,7 @@ const styles = StyleSheet.create({
   input: {
     height: 40,
     margin: 12,
-    width: "80%",
+    width: '80%',
     borderWidth: 1,
     padding: 10,
   },
