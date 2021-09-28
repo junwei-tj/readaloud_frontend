@@ -12,6 +12,9 @@ import {
 import {UserContext} from '../App';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faUserCircle} from '@fortawesome/free-solid-svg-icons';
+
 export default function SettingsScreen({navigation}) {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -40,6 +43,7 @@ export default function SettingsScreen({navigation}) {
       <View style={{alignItems: 'center'}}>
         <Text>Settings Screen</Text>
 
+        <FontAwesomeIcon icon={faUserCircle} size={50} color={'black'} />
         <Text>{userInfo.user.email}</Text>
         <Button onPress={signOut} title="LogOut" color="red" />
       </View>

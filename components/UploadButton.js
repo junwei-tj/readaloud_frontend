@@ -4,6 +4,8 @@ import {StyleSheet} from 'react-native';
 
 import DocumentPicker from 'react-native-document-picker';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faUserCircle} from '@fortawesome/free-solid-svg-icons';
 
 // 0200 26Sep21 : 2 fn so far log and selectFile
 // log change to uploading file
@@ -111,6 +113,8 @@ export default function UploadButton() {
         <Button title="log() -> upload file" onPress={log} />
       </View>
       <Button title="test api" onPress={APICall} />
+      {/* <FontAwesomeIcon icon={faCoffee} size={50} color={'blue'} /> */}
+      <FontAwesomeIcon icon={faUserCircle} size={50} color={'black'} />
     </View>
   );
 }
