@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext } from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import BuildConfig from 'react-native-build-config';
@@ -8,10 +9,23 @@ import BuildConfig from 'react-native-build-config';
 import HomeScreen from './screens/HomeScreen';
 import PlayAudioScreen from './screens/PlayAudioScreen';
 import LoginScreen from './screens/LoginScreen';
+import SettingsScreen from './screens/SettingsScreen';
+import PDFUploadScreen from './screens/PDFUploadScreen';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
 export const UserContext = createContext();
+
+function HomeScreenStack() {
+  return (
+      <Stack.Navigator>
+          <Stack.Screen name="HomeScreen" component={HomeScreen} options={{headerShown: false}}/>
+          <Stack.Screen name="PlayAudioScreen" component={PlayAudioScreen} />
+      </Stack.Navigator>
+  );
+}
 
 export default function App() {
 
@@ -41,19 +55,43 @@ export default function App() {
   return (
     <UserContext.Provider value={{ signedIn, setSignedIn, userInfo, setUserInfo }}>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName={signedIn ? "Home" : "Login"}>
-          <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{title: 'ReadAloud'}}
-          />
+      {!signedIn ? 
+        <Stack.Navigator>
           <Stack.Screen
             name="Login"
             component={LoginScreen}
             options={{headerShown: false}}
           />
-          <Stack.Screen name="PlayAudio" component={PlayAudioScreen} />
-        </Stack.Navigator>
+        </Stack.Navigator> :
+
+        <Tab.Navigator
+            initialRouteName="HomeScreen"
+                screenOptions={({route}) => ({
+                    tabBarIcon: ({ focused, color, size }) => {
+                      let iconName;
+
+                      if (route.name === 'Home') {
+                        iconName = focused
+                          ? 'home'
+                          : 'home';
+                      } else if (route.name === 'PDFUpload') {
+                        iconName = focused ? 'home' : 'home';
+                      } else if (route.name === 'Settings') {
+                        iconName = focused ? 'home' : 'home';
+                      }
+
+                      // You can return any component that you like here!
+                      return <Ionicons name={iconName} size={size} color={color} />;
+                    },
+                    tabBarActiveTintColor: 'tomato',
+                    tabBarInactiveTintColor: 'gray',
+                })}
+                >
+                <Tab.Screen name="Home" component={HomeScreenStack} options={{headerShown: false}} />
+                <Tab.Screen name="PDFUpload" component={PDFUploadScreen} options={{headerShown: false}}/>
+                <Tab.Screen name="Settings" component={SettingsScreen} options={{headerShown: false}}/>
+            </Tab.Navigator>
+             }
       </NavigationContainer>
     </UserContext.Provider>
   );
