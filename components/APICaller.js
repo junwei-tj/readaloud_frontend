@@ -1,12 +1,23 @@
-const getAudiobookTitles = (userID) => {
-    const apiURL = "https://localhost:8081/api/audiobook/titles/?userid=" + userID;
-    fetch(apiURL)
-    .then((response) => response.json())
-    .then((responseJson) => {
-        return responseJson;
-    }).catch((error) => {
-        console.error(error);
-    })
+import axios from 'axios';
+
+const url = "https://sleepy-plateau-79000.herokuapp.com/api/";
+
+export const getAudiobookTitles = async (userID) => {
+    try {
+        const { data } = await axios.get(url + "audiobooks/titles/?userid=" + userID);
+        return data;
+    }
+    catch (error) {
+        console.log(error.message);
+    }
 }
 
-export default APICaller;
+export const getAudiobookText = async (bookID) => {
+    try {
+        const { data } = await axios.get(url + "audiobooks/" + bookID);
+        return data;
+    }
+    catch (error) {
+        console.log(error.message);
+    }
+}

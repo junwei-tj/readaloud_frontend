@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   SafeAreaView,
   StatusBar,
@@ -19,12 +19,21 @@ import { COLORS, FONTS, SIZES } from '../constants/theme';
 export default function HomeScreen({ navigation }) {
 
   // useEffect(() => {
+  //   if (userInfo){
   //   bookData = getAudiobookTitles(userInfo.user.id);
   //   console.log("user");
   //   console.log(userInfo.user.id);
-  // }, [userInfo.user.id])
+  //   }
+  // }, [userInfo]);
 
   const { setSignedIn, userInfo, setUserInfo } = useContext(UserContext);
+
+  const [retreivedBooks, setRetreivedBooks] = useState();
+
+  async function loadAudiobookTitles(){
+      let titlesJSON = await getAudiobookTitles("123123123124412");
+      setRetreivedBooks(titlesJSON);
+  }
 
   //To replace with real book data
   const bookData = [{"title": "Once Upon A Time", "id": "id1"}, 
