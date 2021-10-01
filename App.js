@@ -31,7 +31,11 @@ function HomeScreenStack() {
         component={HomeScreen}
         options={{headerShown: false}}
       />
-      <Stack.Screen name="PlayAudioScreen" component={PlayAudioScreen} />
+      <Stack.Screen 
+        name="PlayAudioScreen" 
+        component={PlayAudioScreen} 
+        options={{headerShown: false}}  
+      />
     </Stack.Navigator>
   );
 }
