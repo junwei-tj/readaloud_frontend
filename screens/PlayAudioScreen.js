@@ -9,52 +9,69 @@ import {
   ScrollView,
 } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faChevronCircleLeft, faPlayCircle, faBars } from '@fortawesome/free-solid-svg-icons';
+import { faChevronCircleLeft, faPlayCircle, faBookmark } from '@fortawesome/free-solid-svg-icons';
 import Slider from '@react-native-community/slider';
+import { COLORS, SIZES, FONTS } from '../constants/theme';
 
 const styles = StyleSheet.create({
     container: {
         height: '100%',
+        backgroundColor: COLORS.offblack,
     },
+    // top bar
     topBar: {
         height: '10%',
         width: '100%',
-        padding: 16,
-        backgroundColor: 'grey',
+        paddingHorizontal: 24,
         justifyContent: 'space-between',
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'center',        
+        backgroundColor: COLORS.saffron,
     },
-    iconContainer: {
-        borderRadius: 32,
-        width: 32,
-        height: 32, 
+    backIcon: {
+        borderRadius: 16,
         overflow: 'hidden',
         marginRight: 16,
     },
+    // text reader
     textReader: {
         height: '70%',
-        backgroundColor: 'blue',
-    },
-    bottomBar: {
-        height: '20%',
-        backgroundColor: 'green',
-        alignItems: 'center',
-    },
-    bookTitleContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        backgroundColor: 'orange',
     },
     textStyle: {
+        ...FONTS.body1,
         fontSize: 24,
         paddingVertical: 16,
         paddingHorizontal: 24,
+        color: COLORS.white,
+    },
+    // bottom bar
+    bottomBar: {
+        height: '20%',
+        alignItems: 'center',
+        backgroundColor: COLORS.saffron,
+        paddingVertical: 8,
+    },
+    pageText: {
+        fontSize: 24,
+        marginTop: 8,
     },
     slider: {
         width: '90%', 
         height: 40,
+    },
+    controlBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+        alignItems: 'center',
+        width: '80%'
+    },
+    controlIcons: {
+        width: 64,
+        height: 56,
+        borderRadius: 24,
+        // backgroundColor: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
 
@@ -64,6 +81,8 @@ export default function PlayAudioScreen({ navigation }) {
     const [maxSliderValue, setMaxSliderValue] = useState(5);
     const [isPlaying, setIsPlaying] = useState(false);
     const [intervalObj, setIntervalObj] = useState(null);
+
+    const currPageNum = 5; // temp
 
     // function to increment slider position every second
     // const updateSlider
@@ -95,14 +114,12 @@ export default function PlayAudioScreen({ navigation }) {
             <StatusBar barStyle='dark-content' />
             <View style={styles.container}>
                 <View style={styles.topBar}>
-                    <View style={styles.iconContainer}>
-                        <Pressable onPress={() => navigation.navigate("HomeScreen")} android_ripple={{color: 'lightgray'}}>
-                            <FontAwesomeIcon icon={faChevronCircleLeft} size={32} color={'black'} />
+                    <View style={styles.backIcon}>
+                        <Pressable onPress={() => navigation.navigate("HomeScreen")} android_ripple={{color: 'gray', borderless: true}}>
+                            <FontAwesomeIcon icon={faChevronCircleLeft} size={36} color={COLORS.offblack} style={{margin: -1}}/>
                         </Pressable>
                     </View>
-                    <View style={styles.bookTitleContainer}>
-                        <Text style={{fontSize: 32}}>Title of Book</Text>
-                    </View>                    
+                    <Text style={FONTS.h1}>Title of Book</Text>
                 </View>
                 <ScrollView style={styles.textReader}>
                     <Text style={styles.textStyle}>
@@ -110,6 +127,7 @@ export default function PlayAudioScreen({ navigation }) {
                     </Text>
                 </ScrollView>
                 <View style={styles.bottomBar}>
+                    <Text style={FONTS.h2}>Pg {currPageNum}</Text>
                     <Slider
                         style={styles.slider}
                         minimumValue={0}
@@ -117,20 +135,19 @@ export default function PlayAudioScreen({ navigation }) {
                         minimumTrackTintColor="#FFFFFF"
                         maximumTrackTintColor="#000000"
                         value={sliderValue}
-                    />
-                    <View style={styles.iconContainer}>
-                        <Pressable onPress={onPlayPressed} android_ripple={{color: 'lightgray'}}>
-                            <FontAwesomeIcon icon={faPlayCircle} size={32} color={'black'} />
-                        </Pressable>
+                    />                    
+                    <View style={styles.controlBar}>   
+                        <View style={styles.controlIcons}>   
+                            <Pressable onPress={onPlayPressed} android_ripple={{color: 'gray', borderless: true}}>
+                                <FontAwesomeIcon icon={faPlayCircle} size={48} color={'black'} />
+                            </Pressable>
+                        </View>
+                        <View style={styles.controlIcons}>   
+                            <Pressable onPress={() => console.log("pressed book options!")} android_ripple={{color: 'gray', borderless: true}}>
+                                <FontAwesomeIcon icon={faBookmark} size={42} color={'black'}/>
+                            </Pressable>
+                        </View>                        
                     </View>
-                    <View style={styles.iconContainer}>
-                        <Pressable onPress={() => console.log("pressed book options!")} android_ripple={{color: 'lightgray'}}>
-                            <FontAwesomeIcon icon={faBars} size={32} color={'black'} />
-                        </Pressable>
-                    </View>
-                    <Text>
-                        {sliderValue}
-                    </Text>
                 </View>
             </View>
         </SafeAreaView>
