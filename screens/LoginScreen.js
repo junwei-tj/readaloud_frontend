@@ -65,7 +65,7 @@ export default function Login({ navigation }) {
       const userInfo = await GoogleSignin.signIn();
       setUserInfo(userInfo);
       setSignedIn(true);
-      navigation.replace("Home")
+      //navigation.replace("Home")
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled the login flow

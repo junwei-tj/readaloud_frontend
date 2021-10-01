@@ -1,54 +1,169 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   SafeAreaView,
   StatusBar,
+  StyleSheet,
   Text,
-  Button,
+  TextInput,
   View,
+  ScrollView,
   useColorScheme,
+  FlatList,
+  TouchableOpacity,
 } from 'react-native';
 
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { UserContext } from '../App';
+import { getAudiobookTitles } from '../components/APICaller';
+import { COLORS, FONTS, SIZES } from '../constants/theme';
 
 export default function HomeScreen({ navigation }) {
-  const isDarkMode = useColorScheme() === 'dark';
 
-  // const backgroundStyle = {
-  //   backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  // };
+  // useEffect(() => {
+  //   if (userInfo){
+  //   bookData = getAudiobookTitles(userInfo.user.id);
+  //   console.log("user");
+  //   console.log(userInfo.user.id);
+  //   }
+  // }, [userInfo]);
 
   const { setSignedIn, userInfo, setUserInfo } = useContext(UserContext);
-  console.log(userInfo);
 
-  const signOut = async () => {
-    try {
-      await GoogleSignin.signOut();
-      setSignedIn(false);
-      setUserInfo(null); // Remember to remove the user from your app's state as well
-      navigation.replace("Login")
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const [retreivedBooks, setRetreivedBooks] = useState();
+
+  async function loadAudiobookTitles(){
+      let titlesJSON = await getAudiobookTitles("123123123124412");
+      setRetreivedBooks(titlesJSON);
+  }
+
+  //To replace with real book data
+  const bookData = [{"title": "Once Upon A Time", "id": "id1"}, 
+                    {"title": "Kary Had A Little Lamb", "id": "id2"},
+                    {"title": "Pokemon", "id": "id3"},
+                    {"title": "CZ3002", "id": "id4"}];
+
+
+  function renderHeader(userInfo){
+    return (
+      <>
+        <View style={styles.header}>
+          <View style= {{flex:1, flexDirection: "row"}}>
+            <Text style={styles.whiteFont}>
+              Good Day {""} 
+            </Text>
+            <Text style={styles.saffronFont}>
+              {userInfo ? userInfo.user.name : null}
+            </Text>
+            <Text style={styles.whiteFont}>
+              {" "}!
+            </Text>
+          </View>
+        </View>
+        <TextInput 
+          style={styles.searchBar} 
+          placeholder="Search for audiobook..." 
+        />
+      </>
+      
+    )
+  }
+
+  function renderBody(bookData){
+
+    const Item = ({ title }) => (
+      <TouchableOpacity
+        onPress = {() => navigation.navigate('PlayAudioScreen')} >
+        <View style={styles.book}>
+          <Text style={styles.whiteFont}>{title}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+
+    const renderItem = ({ item }) => (
+      <Item title={item.title} />
+    );
+
+    return (
+      <View style={{ flex: 1 }}>
+
+          <View style={styles.body}>
+              <Text style={styles.whiteFont}>My Books</Text>
+          </View>
+
+          <View style={styles.booklist}>
+              <FlatList
+                  data={bookData}
+                  renderItem={renderItem}
+                  keyExtractor={item => `${item.id}`}
+              />
+          </View>
+
+      </View>
+    )
+  }
 
   return (
-    
-    <SafeAreaView>
+    <SafeAreaView style={styles.background}>
       <StatusBar barStyle='dark-content' />
-      <View style={{ alignItems: 'center' }}>
-        <Text>Home Screen</Text>
-        <Button
-            title="Play Audio"
-            onPress={() => navigation.navigate('PlayAudio')}
-        />
-        <Text>Hello {userInfo ? userInfo.user.name : ""}</Text>
-        <Button
-          onPress={signOut}
-          title="LogOut"
-          color="red"
-        />
-      </View>
+        <View style={{height:120}}>
+          {renderHeader(userInfo)}
+        </View> 
+
+        <ScrollView>
+          <View>
+            {renderBody(bookData)}
+          </View>
+        </ScrollView>
+
     </SafeAreaView>
   );
 }
+
+const styles= StyleSheet.create({
+  background: {
+    flex: 1, 
+    backgroundColor: COLORS.offblack,
+  },
+  header: {
+    flex: 1, 
+    flexDirection:"row", 
+    paddingTop: SIZES.padding, 
+    paddingLeft: SIZES.padding,
+    alignItems: "center",
+  },
+  searchBar: {
+    height: 40,
+    borderWidth: 3,
+    paddingLeft: SIZES.padding,
+    marginHorizontal: 15,
+    borderColor: COLORS.saffron,
+    borderRadius: 20,
+    backgroundColor:COLORS.white,
+  },
+  body: {
+    paddingHorizontal: SIZES.padding, 
+    paddingTop: SIZES.padding, 
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
+  },
+  booklist: {
+    flex: 1, 
+    marginTop: SIZES.padding,
+  },
+  book: {
+    paddingHorizontal: 20, 
+    paddingVertical: 40, 
+    marginVertical: 10, 
+    marginHorizontal: 15, 
+    color: COLORS.white, 
+    backgroundColor: COLORS.saffron, 
+    borderRadius: 10
+  },
+  whiteFont:{
+    ...FONTS.h2, 
+    color: COLORS.white
+  },
+  saffronFont:{
+    ...FONTS.h2, 
+    color: COLORS.saffron,
+  }
+})
