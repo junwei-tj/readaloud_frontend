@@ -1,4 +1,4 @@
-import React, { useState, useEffect, } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   StatusBar,
@@ -10,8 +10,17 @@ import {
 } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronCircleLeft, faPlayCircle, faBookmark } from '@fortawesome/free-solid-svg-icons';
-import Slider from '@react-native-community/slider';
 import { COLORS, SIZES, FONTS } from '../constants/theme';
+
+import Tts from 'react-native-tts';
+import HighlightText from '@sanar/react-native-highlight-text';
+
+import { book } from '../testBeeMovie'; // REMOVE AFTER INCORPORATING API
+import { progress } from '../testBookProgress'; // REMOVE AFTER INCORPORATING API
+
+Tts.setDucking(true); // Enable lowering other applications output level while speaking (also referred to as "ducking").
+
+const sentenceRegex = /[^.?!]+[.!?]+[\])'"`’”]*|.+$/g; // used to split text into sentences
 
 const styles = StyleSheet.create({
     container: {
@@ -77,37 +86,57 @@ const styles = StyleSheet.create({
 
 export default function PlayAudioScreen({ navigation }) {
 
-    const [sliderValue, setSliderValue] = useState(0); // to change to user's last saved position
-    const [maxSliderValue, setMaxSliderValue] = useState(5);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [intervalObj, setIntervalObj] = useState(null);
+    const [isPlaying, setIsPlaying] = useState(false);    
 
-    const currPageNum = 5; // temp
+    const [page, setPage] = useState({
+        sentenceNum: 30,
+        pageText: book[0].page[progress.currentPage].body,
+        sentences: book[0].page[progress.currentPage].body.match(sentenceRegex),
+        pageNum: progress.currentPage,
+    })
 
     // function to increment slider position every second
-    // const updateSlider
-
     const onPlayPressed = () => {
-        if (!isPlaying) {
-            if (sliderValue === maxSliderValue) { // restart audio
-                setSliderValue(0);
-            }
-            setIntervalObj(setInterval(() => {
-                setSliderValue(prevValue => prevValue + 1);
-            }, 1000));
-        } else {
-            clearInterval(intervalObj);
-            console.log("stopped!");
-        }
         setIsPlaying(!isPlaying); // because updating state has a lag, we do it at the end to ensure lag doesn't affect anything
     }
 
-    useEffect(() => {
-        if (sliderValue === maxSliderValue) {
-            clearInterval(intervalObj);
-            setIsPlaying(false);
+    const advance = () => {
+        if (page.sentences[page.sentenceNum+1] !== undefined) {
+            // go to next sentence            
+            setPage(prev => {
+                Tts.speak(prev.sentences[prev.sentenceNum+1].trim());
+                return ({
+                    ...prev,
+                    sentenceNum: prev.sentenceNum+1,
+                })
+            });
+        } else {
+            // advance to next page
+            setPage(prev => {
+                // play(0, book[0].page[prev.pageNum+1].body.match(sentenceRegex));
+                Tts.speak(book[0].page[prev.pageNum+1].body.match(sentenceRegex)[0].trim());
+                return ({
+                    sentenceNum: 0,
+                    pageText: book[0].page[prev.pageNum+1].body,
+                    sentences: book[0].page[prev.pageNum+1].body.match(sentenceRegex),
+                    pageNum: prev.pageNum+1,
+                });
+            });
         }
-    }, [sliderValue])
+    }
+
+    useEffect(() => {
+        Tts.removeAllListeners('tts-finish');
+        Tts.addEventListener('tts-finish', advance);
+    }, [page]);
+
+    useEffect(() => {
+        if (isPlaying) {
+            Tts.speak(page.sentences[page.sentenceNum].trim());
+        } else {
+            Tts.stop();
+        }
+    }, [isPlaying]);
   
     return (
         <SafeAreaView>
@@ -122,20 +151,15 @@ export default function PlayAudioScreen({ navigation }) {
                     <Text style={FONTS.h1}>Title of Book</Text>
                 </View>
                 <ScrollView style={styles.textReader}>
-                    <Text style={styles.textStyle}>
-                        {sampleText}
-                    </Text>
+                    <HighlightText 
+                        style={styles.textStyle}
+                        highlightStyle={{ backgroundColor: COLORS.saffron }}
+                        searchWords={[page.sentences[page.sentenceNum].trim()]}
+                        textToHighlight={page.pageText}
+                    />
                 </ScrollView>
                 <View style={styles.bottomBar}>
-                    <Text style={FONTS.h2}>Pg {currPageNum}</Text>
-                    <Slider
-                        style={styles.slider}
-                        minimumValue={0}
-                        maximumValue={maxSliderValue}
-                        minimumTrackTintColor="#FFFFFF"
-                        maximumTrackTintColor="#000000"
-                        value={sliderValue}
-                    />                    
+                    <Text style={FONTS.h2}>Pg {page.pageNum}</Text>            
                     <View style={styles.controlBar}>   
                         <View style={styles.controlIcons}>   
                             <Pressable onPress={onPlayPressed} android_ripple={{color: 'gray', borderless: true}}>
@@ -171,3 +195,6 @@ const sampleText =  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ve
                     " sodales. Phasellus a elit nulla. Vivamus ullamcorper blandit tempor. Fusce bibendum nisl vel libero sagittis, eget elementum" + 
                     " nisl luctus. Quisque dictum velit ut tincidunt aliquam. Fusce vel sapien quis ex sagittis suscipit a id ligula. Etiam semper" + 
                     " sapien ante, id imperdiet nunc semper a.";
+
+const beeMovie =    "According to all known laws of aviation, there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground." +
+                    " The bee, of course, flies anyway because bees don't care what humans think is impossible."

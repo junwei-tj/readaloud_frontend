@@ -26,16 +26,17 @@ export const UserContext = createContext();
 function HomeScreenStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen
-        name="HomeScreen"
-        component={HomeScreen}
-        options={{headerShown: false}}
-      />
       <Stack.Screen 
         name="PlayAudioScreen" 
         component={PlayAudioScreen} 
         options={{headerShown: false}}  
       />
+      <Stack.Screen
+        name="HomeScreen"
+        component={HomeScreen}
+        options={{headerShown: false}}
+      />
+      
     </Stack.Navigator>
   );
 }
