@@ -6,41 +6,62 @@ import {
   Text,
   TextInput,
   View,
-  ScrollView,
   useColorScheme,
   FlatList,
   TouchableOpacity,
 } from 'react-native';
 
 import { UserContext } from '../App';
-import { getAudiobookTitles } from '../components/APICaller';
+import { getAudiobookTitles, loginUser } from '../components/APICaller';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
 
 export default function HomeScreen({ navigation }) {
 
-  // useEffect(() => {
-  //   if (userInfo){
-  //   bookData = getAudiobookTitles(userInfo.user.id);
-  //   console.log("user");
-  //   console.log(userInfo.user.id);
-  //   }
-  // }, [userInfo]);
-
-  const { setSignedIn, userInfo, setUserInfo } = useContext(UserContext);
-
+  useEffect(() => {
+    loadAudiobookTitles();
+    setFilteredBooks(bookData); //to replace with retrievedBooks after names added in
+    logIntoServer();
+  }, [userInfo]);
+  
+  const { userInfo } = useContext(UserContext);
   const [retreivedBooks, setRetreivedBooks] = useState();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredBooks, setFilteredBooks] = useState(bookData);
+  const [selectedBook, setSelectedBook] = useState({audiobookText: "sample text", lastProgress: "sample progress"})
 
   async function loadAudiobookTitles(){
-      let titlesJSON = await getAudiobookTitles("123123123124412");
-      setRetreivedBooks(titlesJSON);
+    let titlesJSON = await getAudiobookTitles("123123123124412");
+    setRetreivedBooks(titlesJSON);
   }
 
-  //To replace with real book data
+  async function logIntoServer(){
+    let res = await loginUser(userInfo.user);
+    console.log(res);
+  }
+
+  //Temp book data
   const bookData = [{"title": "Once Upon A Time", "id": "id1"}, 
                     {"title": "Kary Had A Little Lamb", "id": "id2"},
                     {"title": "Pokemon", "id": "id3"},
-                    {"title": "CZ3002", "id": "id4"}];
+                    {"title": "CZ3002", "id": "id4"},
+                    {"title": "CZ4004", "id": "id5"}];
 
+  const searchFilter = (text) => {
+    if (text) {
+      const newData = bookData.filter((item) => {
+        const itemData = item.title ? item.title.toUpperCase()
+        : ''.toUpperCase();
+      const textData = text.toUpperCase();
+      return itemData.indexOf(textData) > -1;
+      });
+      setFilteredBooks(newData);
+      setSearchTerm(text);
+    }
+    else {
+      setFilteredBooks(bookData);
+      setSearchTerm(text);
+    }
+  }
 
   function renderHeader(userInfo){
     return (
@@ -60,7 +81,10 @@ export default function HomeScreen({ navigation }) {
         </View>
         <TextInput 
           style={styles.searchBar} 
-          placeholder="Search for audiobook..." 
+          placeholder="Search for audiobook!"
+          underlineColorAndroid="transparent"
+          value={searchTerm}
+          onChangeText={(text) => searchFilter(text)}
         />
       </>
       
@@ -70,10 +94,10 @@ export default function HomeScreen({ navigation }) {
   function renderBody(bookData){
 
     const Item = ({ title }) => (
-      <TouchableOpacity
-        onPress = {() => navigation.navigate('PlayAudioScreen')} >
-        <View style={styles.book}>
-          <Text style={styles.whiteFont}>{title}</Text>
+      <TouchableOpacity style={styles.book}
+        onPress = {() => navigation.navigate('PlayAudioScreen', selectedBook)} >
+        <View>
+          <Text style={styles.bookText}>{title}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -84,19 +108,19 @@ export default function HomeScreen({ navigation }) {
 
     return (
       <View style={{ flex: 1 }}>
-
           <View style={styles.body}>
               <Text style={styles.whiteFont}>My Books</Text>
           </View>
 
           <View style={styles.booklist}>
               <FlatList
-                  data={bookData}
+                  data={filteredBooks}
                   renderItem={renderItem}
                   keyExtractor={item => `${item.id}`}
+                  numColumns={2}
+                  columnWrapperStyle={{justifyContent: "space-between"}}
               />
           </View>
-
       </View>
     )
   }
@@ -107,13 +131,7 @@ export default function HomeScreen({ navigation }) {
         <View style={{height:120}}>
           {renderHeader(userInfo)}
         </View> 
-
-        <ScrollView>
-          <View>
-            {renderBody(bookData)}
-          </View>
-        </ScrollView>
-
+        {renderBody(bookData)}
     </SafeAreaView>
   );
 }
@@ -148,15 +166,22 @@ const styles= StyleSheet.create({
   booklist: {
     flex: 1, 
     marginTop: SIZES.padding,
+    marginLeft: 10,
+    marginRight: 10
   },
   book: {
-    paddingHorizontal: 20, 
-    paddingVertical: 40, 
-    marginVertical: 10, 
-    marginHorizontal: 15, 
+    marginVertical: 5, 
+    marginHorizontal: 5, 
     color: COLORS.white, 
     backgroundColor: COLORS.saffron, 
-    borderRadius: 10
+    borderRadius: 10,
+    flex: 0.5,
+    height: SIZES.height / 3.5,
+  },
+  bookText: {
+    ...FONTS.h2, 
+    color: COLORS.white,
+    padding: 10,
   },
   whiteFont:{
     ...FONTS.h2, 
