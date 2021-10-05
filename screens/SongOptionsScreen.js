@@ -28,22 +28,6 @@ import {getAudiobookTitles} from '../components/APICaller';
 export default function SongOptionsScreen({navigation}) {
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
 
-  // "id": "108442322040682553263"
-
-  // useEffect(() => {
-  //   if (userInfo) {
-  //     let bookData = await getAudiobookTitles(userInfo.user.id);
-  //     console.log('user: ' + userInfo.user.id);
-  //     console.log(bookData);
-  //   }
-  // }, [userInfo]);
-
-  async function loadTitles() {
-    let titlesJSON = await getAudiobookTitles('108442322040682553263');
-    console.log(titlesJSON);
-  }
-  loadTitles();
-
   return (
     <SafeAreaView>
       <StatusBar barStyle="dark-content" />

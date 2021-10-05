@@ -34,18 +34,77 @@ export const SIZES = {
 
 export const FONTS = {
   largeTitle: {
-    fontFamily: 'Roboto-regular',
+    ...Platform.select({
+      ios: {fontFamily: 'helvetica'},
+      android: {fontFamily: 'Roboto-regular'},
+    }),
     fontSize: SIZES.largeTitle,
     lineHeight: 55,
   },
-  h1: {fontFamily: 'Roboto-Black', fontSize: SIZES.h1, lineHeight: 36},
-  h2: {fontFamily: 'Roboto-Bold', fontSize: SIZES.h2, lineHeight: 30},
-  h3: {fontFamily: 'Roboto-Bold', fontSize: SIZES.h3, lineHeight: 22},
-  h4: {fontFamily: 'Roboto-Bold', fontSize: SIZES.h4, lineHeight: 22},
-  body1: {fontFamily: 'Roboto-Regular', fontSize: SIZES.body1, lineHeight: 36},
-  body2: {fontFamily: 'Roboto-Regular', fontSize: SIZES.body2, lineHeight: 30},
-  body3: {fontFamily: 'Roboto-Regular', fontSize: SIZES.body3, lineHeight: 22},
-  body4: {fontFamily: 'Roboto-Regular', fontSize: SIZES.body4, lineHeight: 22},
+  h1: {
+    ...Platform.select({
+      ios: {fontFamily: 'helvetica'},
+      android: {fontFamily: 'Roboto-Black'},
+    }),
+    fontSize: SIZES.h1,
+    lineHeight: 36,
+  },
+  h2: {
+    ...Platform.select({
+      ios: {fontFamily: 'helvetica'},
+      android: {fontFamily: 'Roboto-Bold'},
+    }),
+    fontSize: SIZES.h2,
+    lineHeight: 30,
+  },
+  h3: {
+    ...Platform.select({
+      ios: {fontFamily: 'helvetica'},
+      android: {fontFamily: 'Roboto-Bold'},
+    }),
+    fontSize: SIZES.h3,
+    lineHeight: 22,
+  },
+  h4: {
+    ...Platform.select({
+      ios: {fontFamily: 'helvetica'},
+      android: {fontFamily: 'Roboto-Bold'},
+    }),
+    fontSize: SIZES.h4,
+    lineHeight: 22,
+  },
+  body1: {
+    ...Platform.select({
+      ios: {fontFamily: 'helvetica'},
+      android: {fontFamily: 'Roboto-Regular'},
+    }),
+    fontSize: SIZES.body1,
+    lineHeight: 36,
+  },
+  body2: {
+    ...Platform.select({
+      ios: {fontFamily: 'helvetica'},
+      android: {fontFamily: 'Roboto-Regular'},
+    }),
+    fontSize: SIZES.body2,
+    lineHeight: 30,
+  },
+  body3: {
+    ...Platform.select({
+      ios: {fontFamily: 'helvetica'},
+      android: {fontFamily: 'Roboto-Regular'},
+    }),
+    fontSize: SIZES.body3,
+    lineHeight: 22,
+  },
+  body4: {
+    ...Platform.select({
+      ios: {fontFamily: 'helvetica'},
+      android: {fontFamily: 'Roboto-Regular'},
+    }),
+    fontSize: SIZES.body4,
+    lineHeight: 22,
+  },
 };
 
 const appTheme = {COLORS, SIZES, FONTS};
