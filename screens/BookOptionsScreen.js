@@ -11,7 +11,6 @@ import {
   Image,
   Pressable,
 } from 'react-native';
-// import Icon from 'react-native-vector-icons/FontAwesome';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faPlayCircle,
@@ -22,10 +21,13 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {COLORS, SIZES, FONTS} from '../constants/theme';
 import {UserContext} from '../App';
-// import RippleButton from 'react-native-material-ripple';
 
-export default function BookOptionsScreen({navigation}) {
+export default function BookOptionsScreen({route, navigation}) {
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
+
+  const { selectedBook } = route.params; // Book selected retrieved from Home Screen
+
+  const [bookDetails, setBookDetails] = useState(); // For sending to PlayAudioScreen
 
   return (
     <SafeAreaView>
@@ -39,12 +41,11 @@ export default function BookOptionsScreen({navigation}) {
               <FontAwesomeIcon
                 icon={faChevronCircleLeft}
                 size={36}
-                color={COLORS.offblack}
+                color={COLORS.grey}
                 style={{margin: -1}}
               />
             </Pressable>
           </View>
-          <Text style={FONTS.h1}>Options</Text>
         </View>
 
         <View style={styles.innerContainer}>
@@ -54,23 +55,23 @@ export default function BookOptionsScreen({navigation}) {
         <View style={styles.optionsContainer}>
           <Pressable
             onPress={() => {
-              alert('Play from last timestamp');
+              navigation.navigate('PlayAudioScreen', bookDetails);
             }}
             android_ripple={{color: 'gray', borderless: true}}>
             <View style={styles.options}>
               <FontAwesomeIcon icon={faPlayCircle} size={30} color={'white'} />
-              <Text style={styles.textStyle}>Play from last timestamp</Text>
+              <Text style={styles.textStyle}>Play from saved progress</Text>
             </View>
           </Pressable>
 
           <Pressable
             onPress={() => {
-              alert('Play from chapter');
+              alert('Play from bookmark');
             }}
             android_ripple={{color: 'gray', borderless: true}}>
             <View style={styles.options}>
               <FontAwesomeIcon icon={faClock} size={30} color={'white'} />
-              <Text style={styles.textStyle}>Play from chapter</Text>
+              <Text style={styles.textStyle}>Play from bookmark</Text>
             </View>
           </Pressable>
 
@@ -104,7 +105,7 @@ export default function BookOptionsScreen({navigation}) {
 const styles = StyleSheet.create({
   container: {
     height: '100%',
-    backgroundColor: 'grey',
+    backgroundColor: COLORS.offblack,
   },
   topBar: {
     height: '10%',
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.saffron,
+    backgroundColor: COLORS.offblack,
   },
   backIcon: {
     borderRadius: 16,
@@ -131,10 +132,11 @@ const styles = StyleSheet.create({
   innerContainer: {
     height: '60%',
     width: '100%',
-    padding: '10%',
-    backgroundColor: 'black',
+    paddingHorizontal: '5%',
+    backgroundColor: COLORS.offblack,
   },
   innerContainerItems: {
+    ...FONTS.body1,
     padding: '5%',
     height: '100%',
     width: '90%',
@@ -157,7 +159,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     paddingHorizontal: '10%',
     paddingVertical: '5%',
-    backgroundColor: 'black',
+    backgroundColor: COLORS.offblack,
     borderColor: 'white',
   },
   options: {

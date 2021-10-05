@@ -10,6 +10,7 @@ import {
 
 import {UserContext} from '../App';
 import UploadButton from '../components/UploadButton';
+import { COLORS } from '../constants/theme';
 
 export default function PDFUploadScreen({navigation}) {
   const isDarkMode = useColorScheme() === 'dark';
@@ -20,14 +21,9 @@ export default function PDFUploadScreen({navigation}) {
 
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
 
-  console.log(userInfo);
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-
-      <Text style={styles.title}>PDF Upload Screen</Text>
-
       <View style={styles.uploadComponent}>
         <UploadButton />
       </View>
@@ -40,15 +36,8 @@ const styles = StyleSheet.create({
     // flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#c3d5de',
+    backgroundColor: COLORS.offblack,
   },
-  title: {
-    top: 0,
-    bottom: 100,
-    fontWeight: 'bold',
-    fontSize: 20,
-  },
-
   uploadComponent: {
     top: 100,
     left: 50,

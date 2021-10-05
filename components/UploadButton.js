@@ -3,10 +3,11 @@ import {Button, View, Text, TouchableHighlight} from 'react-native';
 import {StyleSheet} from 'react-native';
 
 import DocumentPicker from 'react-native-document-picker';
-import {SafeAreaView} from 'react-native-safe-area-context';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faUserCircle} from '@fortawesome/free-solid-svg-icons';
 import {faFolderOpen} from '@fortawesome/free-solid-svg-icons';
+
+import { COLORS, FONTS } from '../constants/theme';
 
 export default function UploadButton() {
   const [singleFile, setSingleFile] = useState(null);
@@ -102,13 +103,13 @@ export default function UploadButton() {
 
   return (
     <View style={styles.container}>
-      <Text style={{fontWeight: 'bold'}}> {'Upload Files'} </Text>
+      <Text style={{fontWeight: 'bold', paddingTop: 10,...FONTS.h2}}> {'Upload Files'} </Text>
       <TouchableHighlight onPress={selectFile}>
         <View style={styles.selectFile}>
           <FontAwesomeIcon
             icon={faFolderOpen}
             size={100}
-            color={'dodgerblue'}
+            color={'orange'}
           />
           <Text>{'Choose files here...'}</Text>
         </View>
@@ -134,7 +135,7 @@ export default function UploadButton() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white', // change to white, den on main PDFuploadscreen , set background to grey
+    backgroundColor: COLORS.grey, // change to white, den on main PDFuploadscreen , set background to grey
     width: 300,
     height: 400,
     alignItems: 'center',
@@ -143,9 +144,11 @@ const styles = StyleSheet.create({
   selectFile: {
     top: 20,
     width: 200,
+    paddingVertical: 10,
     borderWidth: 10,
-    borderColor: '#72c3fc',
-    borderStyle: 'dotted', //
+    borderColor: COLORS.saffron,
+    borderWidth: 5,
+    borderStyle: 'dotted',
     borderRadius: 5,
     alignItems: 'center',
     backgroundColor: '#d6eeff',

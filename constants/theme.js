@@ -5,6 +5,7 @@ export const COLORS = {
   // base colors
   saffron: '#D89216',
   offblack: '#121212',
+  grey: '#BDB8B3',
   white: '#FFFFFF',
 };
 

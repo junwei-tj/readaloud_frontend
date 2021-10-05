@@ -30,10 +30,7 @@ export const uploadPDF = async (PDFobject) => {
 
 export const getAudiobookTitles = async (userID) => {
     try {
-        console.log(url + "audiobooks/titles/?userid=" + userID);
         const { data } = await axios.get(url + "audiobooks/titles/?userid=" + userID);
-        console.log("res is");
-        console.log(data);
         return data;
     }
     catch (error) {

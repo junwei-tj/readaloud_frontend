@@ -15,8 +15,7 @@ import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faUserCircle} from '@fortawesome/free-solid-svg-icons';
-import {COLORS} from '../constants/theme';
-import {tsModuleDeclaration} from '@babel/types';
+import {FONTS, COLORS} from '../constants/theme';
 
 export default function SettingsScreen({navigation}) {
   const isDarkMode = useColorScheme() === 'dark';
@@ -25,7 +24,7 @@ export default function SettingsScreen({navigation}) {
   //   backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   // };
 
-  const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
+  const { setSignedIn, userInfo, setUserInfo, notifications } = useContext(UserContext);
 
   const signOut = async () => {
     try {
@@ -39,13 +38,10 @@ export default function SettingsScreen({navigation}) {
     }
   };
 
-  console.log(userInfo);
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <View style={{alignItems: 'center'}}>
-        {/* <Text>Settings Screen</Text> */}
 
         <FontAwesomeIcon
           style={styles.icon}
@@ -55,7 +51,6 @@ export default function SettingsScreen({navigation}) {
         />
         <Text style={styles.name}>{userInfo.user.name}</Text>
         <View style={styles.buttonContainer}>
-          <Button style={styles.button} title="bookmarks" color="tomato" />
           <Button
             style={styles.button}
             onPress={signOut}
@@ -82,9 +77,10 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   name: {
+    ...FONTS.h1,
     color: COLORS.saffron,
-    fontSize: 20,
     fontWeight: 'bold',
+    paddingTop: 30,
   },
 
   buttonContainer: {
@@ -101,11 +97,4 @@ const styles = StyleSheet.create({
   button: {
     color: 'tomato',
   },
-  // input: {
-  //   height: 40,
-  //   margin: 12,
-  //   width: '80%',
-  //   borderWidth: 1,
-  //   padding: 10,
-  // },
 });

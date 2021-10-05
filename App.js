@@ -49,6 +49,7 @@ function HomeScreenStack() {
 export default function App() {
   const [signedIn, setSignedIn] = useState(false);
   const [userInfo, setUserInfo] = useState();
+  const [notifications, setNotifications] = useState();
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -78,7 +79,7 @@ export default function App() {
 
   return (
     <UserContext.Provider
-      value={{signedIn, setSignedIn, userInfo, setUserInfo}}>
+      value={{signedIn, setSignedIn, userInfo, setUserInfo, notifications, setNotifications}}>
       <NavigationContainer>
         {!signedIn ? (
           <Stack.Navigator>
@@ -106,17 +107,14 @@ export default function App() {
                 } else if (route.name === 'Settings') {
                   iconName = faUserCircle;
                 }
-
-                // You can return any component that you like here!
-                // return <Ionicons name={iconName} size={size} color={color} />;
                 return (
                   <FontAwesomeIcon icon={iconName} size={25} color={'black'} />
                 );
               },
-
               tabBarActiveTintColor: 'black',
               tabBarActiveBackgroundColor: 'lightgrey',
               tabBarInactiveTintColor: 'gray',
+              tabBarShowLabel: false
             })}>
             <Tab.Screen
               name="Home"

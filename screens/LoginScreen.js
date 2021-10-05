@@ -57,13 +57,16 @@ export default function Login({ navigation }) {
   //   backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   // };
 
-  const { setSignedIn, setUserInfo } = useContext(UserContext);
+  const { setSignedIn, setUserInfo, setNotifications } = useContext(UserContext);
 
   const signIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       let res = await loginUser(userInfo.user); //send API call to server to login
+      if (res){
+        setNotifications(res);
+      }
       setUserInfo(userInfo);
       setSignedIn(true);
     } catch (error) {
