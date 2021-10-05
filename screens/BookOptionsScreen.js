@@ -22,10 +22,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {COLORS, SIZES, FONTS} from '../constants/theme';
 import {UserContext} from '../App';
-import {getAudiobookTitles} from '../components/APICaller';
 // import RippleButton from 'react-native-material-ripple';
 
-export default function SongOptionsScreen({navigation}) {
+export default function BookOptionsScreen({navigation}) {
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
 
   return (
@@ -35,7 +34,7 @@ export default function SongOptionsScreen({navigation}) {
         <View style={styles.topBar}>
           <View style={styles.backIcon}>
             <Pressable
-              onPress={() => navigation.navigate('PlayAudioScreen')}
+              onPress={() => navigation.goBack()}
               android_ripple={{color: 'gray', borderless: true}}>
               <FontAwesomeIcon
                 icon={faChevronCircleLeft}

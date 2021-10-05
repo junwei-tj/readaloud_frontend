@@ -1,9 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useContext } from 'react';
 import {
   SafeAreaView,
   StatusBar,
   Text,
-  Button,
   View,
   useColorScheme,
   StyleSheet,
@@ -16,6 +15,7 @@ import {
 } from '@react-native-google-signin/google-signin';
 
 import { UserContext } from '../App';
+import { loginUser } from '../components/APICaller';
 
 const styles = StyleSheet.create({
   container: {
@@ -59,13 +59,13 @@ export default function Login({ navigation }) {
 
   const { setSignedIn, setUserInfo } = useContext(UserContext);
 
-  const signIn = async (navigation) => {
+  const signIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
+      let res = await loginUser(userInfo.user); //send API call to server to login
       setUserInfo(userInfo);
       setSignedIn(true);
-      //navigation.replace("Home")
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled the login flow

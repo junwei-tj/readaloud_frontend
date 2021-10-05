@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import {UserContext} from '../App';
+import { StackActions } from '@react-navigation/native';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -31,7 +32,8 @@ export default function SettingsScreen({navigation}) {
       await GoogleSignin.signOut();
       setSignedIn(false);
       setUserInfo(null); // Remember to remove the user from your app's state as well
-      //navigation.replace("Login")
+      navigation.dispatch(StackActions.popToTop());
+
     } catch (error) {
       console.error(error);
     }

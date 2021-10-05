@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 import { UserContext } from '../App';
-import { getAudiobookTitles, loginUser } from '../components/APICaller';
+import { getAudiobookTitles } from '../components/APICaller';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
 
 export default function HomeScreen({ navigation }) {
@@ -20,7 +20,6 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     loadAudiobookTitles();
     setFilteredBooks(bookData); //to replace with retrievedBooks after names added in
-    logIntoServer();
   }, [userInfo]);
   
   const { userInfo } = useContext(UserContext);
@@ -32,11 +31,6 @@ export default function HomeScreen({ navigation }) {
   async function loadAudiobookTitles(){
     let titlesJSON = await getAudiobookTitles("123123123124412");
     setRetreivedBooks(titlesJSON);
-  }
-
-  async function logIntoServer(){
-    let res = await loginUser(userInfo.user);
-    console.log(res);
   }
 
   //Temp book data
@@ -95,7 +89,7 @@ export default function HomeScreen({ navigation }) {
 
     const Item = ({ title }) => (
       <TouchableOpacity style={styles.book}
-        onPress = {() => navigation.navigate('PlayAudioScreen', selectedBook)} >
+        onPress = {() => navigation.navigate('BookOptionsScreen', selectedBook)} >
         <View>
           <Text style={styles.bookText}>{title}</Text>
         </View>

@@ -122,7 +122,8 @@ export default function PlayAudioScreen({navigation}) {
         <View style={styles.topBar}>
           <View style={styles.backIcon}>
             <Pressable
-              onPress={() => navigation.navigate('HomeScreen')}
+              //onPress={() => navigation.navigate('HomeScreen')}
+              onPress={() => navigation.goBack()}
               android_ripple={{color: 'gray', borderless: true}}>
               <FontAwesomeIcon
                 icon={faChevronCircleLeft}
@@ -162,7 +163,7 @@ export default function PlayAudioScreen({navigation}) {
             <View style={styles.controlIcons}>
               {/* <Pressable onPress={() => console.log("pressed book options!")} android_ripple={{color: 'gray', borderless: true}}> */}
               <Pressable
-                onPress={() => navigation.navigate('SongOptionsScreen')}
+                onPress={() => navigation.navigate('BookOptionsScreen')}
                 android_ripple={{color: 'gray', borderless: true}}>
                 <FontAwesomeIcon icon={faBookmark} size={42} color={'black'} />
               </Pressable>

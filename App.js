@@ -1,4 +1,5 @@
 import React, {useState, useEffect, createContext} from 'react';
+import { Platform } from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -8,11 +9,10 @@ import BuildConfig from 'react-native-build-config';
 
 import HomeScreen from './screens/HomeScreen';
 import PlayAudioScreen from './screens/PlayAudioScreen';
-import SongOptionsScreen from './screens/SongOptionsScreen';
+import BookOptionsScreen from './screens/BookOptionsScreen';
 import LoginScreen from './screens/LoginScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import PDFUploadScreen from './screens/PDFUploadScreen';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faUserCircle} from '@fortawesome/free-solid-svg-icons';
@@ -38,8 +38,8 @@ function HomeScreenStack() {
         options={{headerShown: false}}
       />
       <Stack.Screen
-        name="SongOptionsScreen"
-        component={SongOptionsScreen}
+        name="BookOptionsScreen"
+        component={BookOptionsScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
@@ -53,9 +53,15 @@ export default function App() {
   useEffect(() => {
     GoogleSignin.configure({
       scopes: ['email'], // what API you want to access on behalf of the user, default is email and profile
-      webClientId: BuildConfig.CLIENT_SERVER_ID, // client ID of type WEB for your server (needed to verify user ID and offline access)
-      //  webClientId: BuildConfig.webClientId, // use this webClientId for ios
       offlineAccess: true, // if you want to access Google API on behalf of the user FROM YOUR SERVER
+      ...Platform.select({ // client ID of type WEB for your server (needed to verify user ID and offline access)
+        ios: {
+          webClientId: BuildConfig.webClientId, // for iOS
+        },
+        android: {
+          webClientId: BuildConfig.CLIENT_SERVER_ID, // for Android
+        }
+      })
     });
 
     // check if user is signed in
