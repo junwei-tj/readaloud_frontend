@@ -1,19 +1,12 @@
 import React, {useState} from 'react';
-import {Button, View} from 'react-native';
+import {Button, View, Text, TouchableHighlight} from 'react-native';
 import {StyleSheet} from 'react-native';
 
 import DocumentPicker from 'react-native-document-picker';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faUserCircle} from '@fortawesome/free-solid-svg-icons';
-
-// 0200 26Sep21 : 2 fn so far log and selectFile
-// log change to uploading file
-// selectFile is to assign a file 'singleFile'
-/* 
-    1) work on user feed back after user chose PDF file 
-    2) styling (stylesheet)
-*/
+import {faFolderOpen} from '@fortawesome/free-solid-svg-icons';
 
 export default function UploadButton() {
   const [singleFile, setSingleFile] = useState(null);
@@ -106,25 +99,62 @@ export default function UploadButton() {
     console.log(responseJson);
     alert(responseJson.results[0].email);
   };
+
   return (
-    <View>
-      <View style={styles.wkTest}>
-        <Button title="wk choosefilebtn" onPress={selectFile} />
-        <Button title="log() -> upload file" onPress={log} />
+    <View style={styles.container}>
+      <Text style={{fontWeight: 'bold'}}> {'Upload Files'} </Text>
+      <TouchableHighlight onPress={selectFile}>
+        <View style={styles.selectFile}>
+          <FontAwesomeIcon
+            icon={faFolderOpen}
+            size={100}
+            color={'dodgerblue'}
+          />
+          <Text>{'Choose files here...'}</Text>
+        </View>
+      </TouchableHighlight>
+
+      <View style={styles.chosenFile}>
+        {singleFile ? (
+          <View>
+            <Text> {singleFile.name} </Text>
+            <Button onPress={() => setSingleFile(null)} title="remove"></Button>
+          </View>
+        ) : (
+          <Text> {''} </Text>
+        )}
       </View>
-      <Button title="test api" onPress={APICall} />
-      {/* <FontAwesomeIcon icon={faCoffee} size={50} color={'blue'} /> */}
-      <FontAwesomeIcon icon={faUserCircle} size={50} color={'black'} />
+
+      <View style={styles.uploadBtn}>
+        <Button title="Upload PDF" onPress={log} />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wkTest: {
-    flexDirection: 'row',
-    position: 'relative',
-    top: 350,
-    width: 400,
-    justifyContent: 'space-evenly',
+  container: {
+    backgroundColor: 'white', // change to white, den on main PDFuploadscreen , set background to grey
+    width: 300,
+    height: 400,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  selectFile: {
+    top: 20,
+    width: 200,
+    borderWidth: 10,
+    borderColor: '#72c3fc',
+    borderStyle: 'dotted', //
+    borderRadius: 5,
+    alignItems: 'center',
+    backgroundColor: '#d6eeff',
+  },
+  chosenFile: {
+    top: 30,
+    justifyContent: 'space-between',
+  },
+  uploadBtn: {
+    top: 150,
   },
 });

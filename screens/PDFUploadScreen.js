@@ -23,10 +23,12 @@ export default function PDFUploadScreen({navigation}) {
   console.log(userInfo);
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <View style={{alignItems: 'center'}}>
-        <Text>PDF Upload Screen</Text>
+
+      <Text style={styles.title}>PDF Upload Screen</Text>
+
+      <View style={styles.uploadComponent}>
         <UploadButton />
       </View>
     </SafeAreaView>
@@ -34,11 +36,31 @@ export default function PDFUploadScreen({navigation}) {
 }
 
 const styles = StyleSheet.create({
-  input: {
-    height: 40,
-    margin: 12,
-    width: '80%',
-    borderWidth: 1,
-    padding: 10,
+  container: {
+    // flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#c3d5de',
   },
+  title: {
+    top: 0,
+    bottom: 100,
+    fontWeight: 'bold',
+    fontSize: 20,
+  },
+
+  uploadComponent: {
+    top: 100,
+    left: 50,
+    height: '100%',
+    width: '100%',
+  },
+
+  // input: {
+  //   height: 40,
+  //   margin: 12,
+  //   width: '80%',
+  //   borderWidth: 1,
+  //   padding: 10,
+  // },
 });

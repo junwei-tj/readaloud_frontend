@@ -32,15 +32,15 @@ function HomeScreenStack() {
         component={HomeScreen}
         options={{headerShown: false}}
       />
-      <Stack.Screen 
-        name="PlayAudioScreen" 
-        component={PlayAudioScreen} 
-        options={{headerShown: false}}  
+      <Stack.Screen
+        name="PlayAudioScreen"
+        component={PlayAudioScreen}
+        options={{headerShown: false}}
       />
-       <Stack.Screen 
-        name="SongOptionsScreen" 
-        component={SongOptionsScreen} 
-        options={{headerShown: false}}  
+      <Stack.Screen
+        name="SongOptionsScreen"
+        component={SongOptionsScreen}
+        options={{headerShown: false}}
       />
     </Stack.Navigator>
   );
@@ -53,8 +53,8 @@ export default function App() {
   useEffect(() => {
     GoogleSignin.configure({
       scopes: ['email'], // what API you want to access on behalf of the user, default is email and profile
-      // webClientId: BuildConfig.CLIENT_SERVER_ID, // client ID of type WEB for your server (needed to verify user ID and offline access)
-      webClientId: BuildConfig.webClientId, // use this webClientId for ios
+      webClientId: BuildConfig.CLIENT_SERVER_ID, // client ID of type WEB for your server (needed to verify user ID and offline access)
+      //  webClientId: BuildConfig.webClientId, // use this webClientId for ios
       offlineAccess: true, // if you want to access Google API on behalf of the user FROM YOUR SERVER
     });
 
