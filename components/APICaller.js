@@ -79,10 +79,23 @@ export const deleteAudiobook = async bookID => {
   }
 };
 
-export const shareAudiobook = async (userToShareTo, bookID, emailToShareTo) => {
+export const updateAudiobookName = async (bookID, userID, newName) => {
   try {
+    const {data} = await axios.put(url + 'audiobooks/' + bookID, {
+      newBookTitle: newName,
+      user_id: userID,
+    });
+    return data;
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+export const shareAudiobookFile = async (userID, bookID, emailToShareTo) => {
+  try {
+    console.log("entering share audiobook");
     const {data} = await axios.post(url + 'users/share', {
-      user_id: userToShareTo,
+      user_id: userID,
       book_id: bookID,
       email: emailToShareTo,
     });

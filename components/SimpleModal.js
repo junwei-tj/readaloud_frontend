@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 
 import { COLORS, FONTS, SIZES } from '../constants/theme';
-import { deleteAudiobook } from './APICaller';
 
 export default function SimpleModal(props) {
 
@@ -20,7 +19,7 @@ export default function SimpleModal(props) {
 
   const rightCloseModal = (bool, data) => {
     props.changeModalVisible(bool); 
-    props.option === "share" ? props.shareAudiobook() : props.renameAudiobook();
+    props.option === "share" ? props.shareAudiobook(input) : props.renameAudiobook(input);
   }
 
   return (

@@ -1,16 +1,14 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useState, useRef, useContext} from 'react';
 import {
   SafeAreaView,
   StatusBar,
   Text,
-  Button,
   Alert,
   View,
   FlatList,
   useColorScheme,
   StyleSheet,
   Modal,
-  Image,
   Pressable,
 } from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -23,19 +21,49 @@ import {
   faChevronCircleLeft,
 } from '@fortawesome/free-solid-svg-icons';
 import {COLORS, SIZES, FONTS} from '../constants/theme';
+import { deleteAudiobook, updateAudiobookName, shareAudiobookFile } from '../components/APICaller';
 import SimpleModal from '../components/SimpleModal';
+import SlidingUpPanel from 'rn-sliding-up-panel';
 import {UserContext} from '../App';
 
 export default function BookOptionsScreen({route, navigation}) {
 
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
-  const [option, setOption] = useState("");
   const { bookID, bookTitle, pages, lastProgress } = route.params; // Book selected retrieved from Home Screen
+
+  // For bookmarks
+  const panelRef = useRef(null);
+  const [bookmarks, setBookmarks] = useState(lastProgress.bookmarks);
+
+  // States required for modal
+  const [option, setOption] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const changeModalVisible = (bool) =>{
     setIsModalVisible(bool);
   }
 
+  //Bookmark rendered in Flatlist
+  const Bookmark = ({ name, page }) => {
+    return (
+      <View style={styles.bookmarkContainer}>
+        <Text style={styles.bookmarkText}>{name}</Text>
+        <Text style={styles.bookmarkText}>{page+1}</Text>
+      </View>
+    )
+  }
+
+  // Rendering of bookmark
+  const renderItem = ({ item }) => (
+    <Pressable 
+      style= {({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}
+      onPress={() => playAudiobookFromBookmark(item)} 
+      android_ripple={{color: 'dimgray'}}
+    >
+      <Bookmark name={item.name} page={item.page} />
+    </Pressable>
+  )
+
+  //COMPLETED
   const playAudiobook = () => {
     navigation.navigate('PlayAudioScreen', 
                           {
@@ -46,30 +74,80 @@ export default function BookOptionsScreen({route, navigation}) {
                           });
   }
 
-
-  const playAudiobookBookmark = () => {
+  //COMPLETED
+  const playAudiobookFromBookmark = (item) => {
+    panelRef.current.hide();
     navigation.navigate('PlayAudioScreen', 
                           {
                             bookID: bookID, 
                             bookTitle: bookTitle, 
                             pages: pages, 
-                            lastProgress: lastProgress 
+                            lastProgress: lastProgress,
+                            bookmark: item
                           });
   }
 
-  const shareAudiobook = () => {
-    console.log("share audiobook");
+  //COMPLETED
+  const shareAudiobook = async(emailToShareTo) => {
+    let response = await shareAudiobookFile(userInfo.user.id, bookID, emailToShareTo);
+
+    if (response){ //Share successful
+      Alert.alert(
+        bookTitle,
+        "Sharing of audiobook was successful!",
+        [
+          {
+            text: "Yay!",
+            style: "cancel",
+          }
+        ],
+      );
+    } else { //Share unsuccessful
+      Alert.alert(
+        bookTitle,
+        "Sharing of audiobook was unsuccessful, email might be invalid or user might have access to the audiobook already!",
+        [
+          {
+            text: "Back",
+            style: "cancel",
+          }
+        ],
+      );
+    }
   }
 
-  const renameAudiobook = () => {
-    console.log("rename audiobook");
-    
+  //COMPLETED
+  const renameAudiobook = async(newName) => {
+    let response = await updateAudiobookName(bookID, userInfo.user.id, newName);
+    if (response){ //Rename successful
+      Alert.alert(
+        newName,
+        "Rename of audiobook was successful!",
+        [
+          {
+            text: "Yay!",
+            style: "cancel",
+          }
+        ],
+      );
+    } else { // Rename unsuccessful
+      Alert.alert(
+        "Oh No!", 
+        "Rename of audiobook was not successful, please try again!", 
+        [
+          {
+            text: "Back",
+            style: "cancel",
+          }
+        ],
+      );
+    }
   }
 
   const deleteAudiobook = () => {
     Alert.alert(
-      "Deleting Audiobook",
-      "Are you sure you would like to delete " + bookTitle + "?",
+      bookTitle,
+      "Are you sure you would like to delete this audiobook?",
       [
         {
           text: "No",
@@ -123,6 +201,24 @@ export default function BookOptionsScreen({route, navigation}) {
     )
   }
 
+  function renderBookmarks(){
+    return (
+      <SlidingUpPanel 
+        ref={panelRef}
+        draggableRange={{top: 0.65*SIZES.height, bottom: 0}}
+        friction={0.50}
+      >
+        <View style={styles.container2}>
+          <FlatList 
+          data={bookmarks}
+          renderItem={renderItem}
+          keyExtractor={item => item._id}
+          />
+        </View>
+      </SlidingUpPanel>
+    );
+  }
+
   function renderOptionsMenu(){
     return (
       <View style={styles.optionsContainer}>
@@ -137,7 +233,7 @@ export default function BookOptionsScreen({route, navigation}) {
 
       <Pressable
         style= {({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.options2]}
-        onPress={() => alert('Play from bookmark')}>
+        onPress={() => panelRef.current.show()}>
         <View style={styles.options}>
           <FontAwesomeIcon icon={faBookmark} size={30} color={'white'} />
           <Text style={styles.textStyle}>Play from bookmark</Text>
@@ -190,6 +286,7 @@ export default function BookOptionsScreen({route, navigation}) {
         </View>
         {renderModal()}
         {renderOptionsMenu()}
+        {renderBookmarks()}
       </View>
     </SafeAreaView>
   );
@@ -261,5 +358,24 @@ const styles = StyleSheet.create({
   },
   options2: {
     paddingVertical: 5
-  }
+  },
+  bookmarkText: {
+    ...FONTS.h2,
+    color: COLORS.white,
+    padding: 16,
+  },
+  bookmarkContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.saffron,
+  },
+  container2: {
+    height: 0.65*SIZES.height,
+    width: '100%',
+    backgroundColor: COLORS.offblack,
+    borderTopColor: COLORS.saffron,
+    borderTopWidth: 1,
+  },
 });
