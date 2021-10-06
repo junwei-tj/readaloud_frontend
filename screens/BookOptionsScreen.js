@@ -25,9 +25,17 @@ import {UserContext} from '../App';
 export default function BookOptionsScreen({route, navigation}) {
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
 
-  //const { selectedBook } = route.params; // Book selected retrieved from Home Screen
+  const { bookID, bookTitle, pages, lastProgress } = route.params; // Book selected retrieved from Home Screen
 
-  const [bookDetails, setBookDetails] = useState(); // For sending to PlayAudioScreen
+  const playAudiobook = () => {
+    navigation.navigate('PlayAudioScreen', 
+                          {
+                            bookID: bookID, 
+                            bookTitle: bookTitle, 
+                            pages: pages, 
+                            lastProgress: lastProgress 
+                          });
+  }
 
   return (
     <SafeAreaView>
@@ -54,9 +62,7 @@ export default function BookOptionsScreen({route, navigation}) {
 
         <View style={styles.optionsContainer}>
           <Pressable
-            onPress={() => {
-              navigation.navigate('PlayAudioScreen', bookDetails);
-            }}
+            onPress={() => playAudiobook()}
             android_ripple={{color: 'gray', borderless: true}}>
             <View style={styles.options}>
               <FontAwesomeIcon icon={faPlayCircle} size={30} color={'white'} />

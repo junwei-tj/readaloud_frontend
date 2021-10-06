@@ -15,7 +15,7 @@ import {
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../App';
-import { getAudiobookTitles, getAudiobookText } from '../components/APICaller';
+import { getAudiobookTitles, getAudiobookText, getAudiobookProgress } from '../components/APICaller';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
 
 export default function HomeScreen({ navigation }) {
@@ -48,7 +48,7 @@ export default function HomeScreen({ navigation }) {
       let titlesJSON = await getAudiobookTitles("123123123124412"); //Can replace with actual user
       let tempRetrievedArray = [];
       titlesJSON.forEach((item) => {
-        console.log(item);
+        //console.log(item);
         tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.book_title});
       })
       setRetreivedBooks(tempRetrievedArray);
@@ -110,6 +110,28 @@ export default function HomeScreen({ navigation }) {
     }
   }
 
+  const selectBook = async (bookID, bookTitle) => {
+    //Retrieve book's text
+      let pages;
+      let lastProgress;
+      let bookObject;
+      for (let i = 0; i < savedAudiobooks.length; i++){
+        if (savedAudiobooks[i][0] == bookID){
+          bookObject = JSON.parse(savedAudiobooks[i][1]);
+          pages = bookObject[0];
+          lastProgress = await getAudiobookProgress(bookID, "123123123124412"); //to replace with userID or "61516bd4fa5f2e4fe410d358"
+          break;
+       }
+      }
+      navigation.navigate('BookOptionsScreen', 
+                          {
+                            bookID: bookID, 
+                            bookTitle: bookTitle, 
+                            pages: pages, 
+                            lastProgress: lastProgress 
+                          });
+  }
+
   function renderHeader(userInfo){
     return (
       <>
@@ -142,7 +164,8 @@ export default function HomeScreen({ navigation }) {
 
     const SavedBook = ({ bookID, bookTitle }) => (
       <TouchableOpacity style={styles.savedBook}
-        onPress = {() => navigation.navigate('BookOptionsScreen', {bookID: bookID, bookTitle: bookTitle})} >
+        // onPress = {() => navigation.navigate('BookOptionsScreen', {bookID: bookID, bookTitle: bookTitle})} >
+        onPress = {() => selectBook(bookID, bookTitle)} >
         <View>
           <Text style={styles.bookText}>{bookTitle}</Text>
           <Text style={styles.bookText}>{bookID}</Text>
@@ -193,8 +216,6 @@ export default function HomeScreen({ navigation }) {
           </View>
 
           <View style={styles.booklist}>
-              {console.log("flatlist rendered")}
-              {console.log(filteredBooks)}
             { !filteredBooks ? 
               <ActivityIndicator
                 size = "large"
