@@ -16,6 +16,7 @@ import {
 
 import { UserContext } from '../App';
 import { loginUser } from '../components/APICaller';
+import { COLORS, FONTS, SIZES } from '../constants/theme';
 
 const styles = StyleSheet.create({
   container: {
@@ -23,6 +24,7 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: COLORS.offblack
   },
   logo: {
     height: '25%',
@@ -33,13 +35,14 @@ const styles = StyleSheet.create({
     // fontWeight: 'bold',
     // fontSize: 48,
     ...Platform.select({
-      ios: { fontFamily: 'helvetica',fontWeight: 'bold',fontSize: 48, }, 
-      android: { fontFamily: 'sans-serif-light',fontWeight: 'bold',fontSize: 48, }
+      ios: { fontFamily: 'helvetica',fontWeight: 'bold',fontSize: 48, color: COLORS.white}, 
+      android: { fontFamily: 'sans-serif-light',fontWeight: 'bold',fontSize: 48, color: COLORS.white}
  })
   },
   caption: {
     fontStyle: 'italic',
     fontSize: 24,
+    color: COLORS.white
   },
   signInButton: { 
     width: '60%', 

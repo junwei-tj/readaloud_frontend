@@ -25,7 +25,7 @@ import {UserContext} from '../App';
 export default function BookOptionsScreen({route, navigation}) {
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
 
-  const { selectedBook } = route.params; // Book selected retrieved from Home Screen
+  //const { selectedBook } = route.params; // Book selected retrieved from Home Screen
 
   const [bookDetails, setBookDetails] = useState(); // For sending to PlayAudioScreen
 
