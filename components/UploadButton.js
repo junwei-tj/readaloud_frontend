@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: COLORS.grey, // change to white, den on main PDFuploadscreen , set background to grey
     width: 300,
-    height: 400,
+    height: 500,
     alignItems: 'center',
     borderRadius: 10,
   },
