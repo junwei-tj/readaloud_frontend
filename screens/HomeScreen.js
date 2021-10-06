@@ -22,6 +22,7 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     initialiseAllRequiredData();
+    console.log(userInfo);
   }, [userInfo]);
   
   const { userInfo } = useContext(UserContext);
@@ -43,12 +44,10 @@ export default function HomeScreen({ navigation }) {
   // 3) Pushing to audiobookList, and marking if book is saved
   async function loadAudiobookList(){
     try {
-      console.log("running loadAudiobookList");
       // ===== Retrieval of audiobooks under user from the server =====
-      let titlesJSON = await getAudiobookTitles("123123123124412"); //Can replace with actual user
+      let titlesJSON = await getAudiobookTitles("123123123124412"); //Can replace with actual user or 110771401644785347942
       let tempRetrievedArray = [];
       titlesJSON.forEach((item) => {
-        //console.log(item);
         tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.book_title});
       })
       setRetreivedBooks(tempRetrievedArray);
