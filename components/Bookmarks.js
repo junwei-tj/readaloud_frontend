@@ -58,7 +58,7 @@ const Bookmark = ({ name, page }) => {
   return (
     <View style={styles.bookmarkContainer}>
       <Text style={styles.bookmarkText}>{name}</Text>
-      <Text style={styles.bookmarkText}>{page}</Text>
+      <Text style={styles.bookmarkText}>{page+1}</Text>
     </View>
   )
 }

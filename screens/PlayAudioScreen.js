@@ -21,7 +21,7 @@ import { book } from '../testBeeMovie'; // REMOVE AFTER INCORPORATING API
 import { progress } from '../testBookProgress'; // REMOVE AFTER INCORPORATING API
 import { Bookmarks } from '../components/Bookmarks';
 import { UserContext } from '../App';
-import { addBookmark, removeBookmark } from './APICaller';
+import { addBookmark, removeBookmark, updateAudiobookProgress } from '../components/APICaller';
 
 Tts.setDucking(true); // Enable lowering other applications output level while speaking (also referred to as "ducking").
 const sentenceRegex = /[^.?!]+[.!?]+[\])'"`’”]*|.+$/g; // used to split text into sentences
@@ -86,16 +86,26 @@ const styles = StyleSheet.create({
 });
 
 export default function PlayAudioScreen({ navigation, route }) {
+  const bookID = route.params.bookID;
+  const bookPages = route.params.pages.page; // pages is an object with page (an array of the individual pages' text in a book), which is what I only need
+
   const [isPlaying, setIsPlaying] = useState(false);    
-  const [bookmarks, setBookmarks] = useState(progress.bookmarks);
-  const [page, setPage] = useState({
-    sentenceNum: 30,
-    pageText: book[0].page[progress.currentPage].body,
-    sentences: book[0].page[progress.currentPage].body.match(sentenceRegex),
-    pageNum: progress.currentPage,
+  const [bookmarks, setBookmarks] = useState(route.params.lastProgress.bookmarks);
+  const [page, setPage] = useState({ // page holds all info relevant to the current page 
+    sentenceNum: 0,
+    pageText: bookPages[route.params.lastProgress.currentPage].body,
+    sentences: bookPages[route.params.lastProgress.currentPage].body.match(sentenceRegex),
+    pageNum: route.params.lastProgress.currentPage, // pageNum starts from 0
   });
+  // const [page, setPage] = useState({
+  //   sentenceNum: 30,
+  //   pageText: book[0].page[progress.currentPage].body,
+  //   sentences: book[0].page[progress.currentPage].body.match(sentenceRegex),
+  //   pageNum: progress.currentPage,
+  // });
 
   const { userInfo } = useContext(UserContext);
+  const userID = "123123123124412"; // to replace with userInfo.user.id
 
   const panelRef = useRef(null);
   const scrollRef = useRef(null);
@@ -115,8 +125,9 @@ export default function PlayAudioScreen({ navigation, route }) {
           setIsPlaying(false);
           Tts.stop();
       }
-      navigation.goBack();
-      // TODO: save user progress
+      updateAudiobookProgress(bookID, userID, page.pageNum)
+      .then(() => navigation.goBack())
+      .catch((err) => console.log(err));
   }
 
   // eventlistener handler to highlight+play next sentence, and switch to next page if end of page is reached
@@ -133,11 +144,12 @@ export default function PlayAudioScreen({ navigation, route }) {
     } else {
       // advance to next page
       setPage(prev => {
-        const newSentences = book[0].page[prev.pageNum+1].body.match(sentenceRegex);
-        Tts.speak(newSentences[0].trim());
+        const nextPage = bookPages[prev.pageNum+1].body;
+        const newSentences = nextPage.match(sentenceRegex);
+        Tts.speak(newSentences[0].trim()); 
         return ({
           sentenceNum: 0,
-          pageText: book[0].page[prev.pageNum+1].body,
+          pageText: nextPage,
           sentences: newSentences,
           pageNum: prev.pageNum+1,
         });
@@ -175,20 +187,21 @@ export default function PlayAudioScreen({ navigation, route }) {
   }
 
   // function to switch to a bookmark's page
-  const onBookmarkPressed = (page) => {
+  const onBookmarkPressed = (bookmarkedPageNum) => {
     const currPlaying = isPlaying;
     if (currPlaying) {
       Tts.stop(); // stop current playback
     }
     setPage(prev => { // go to chosen page
-      const newSentences = book[0].page[page].body.match(sentenceRegex);
+      const bookmarkedPage = bookPages[bookmarkedPageNum].body;
+      const newSentences = bookmarkedPage.match(sentenceRegex);
       if (currPlaying) Tts.speak(newSentences[0].trim()); // play chosen page
       return ({
         ...prev,
         sentenceNum: 0,
-        pageText: book[0].page[page].body,
+        pageText: bookmarkedPage,
         sentences: newSentences,
-        pageNum: page,
+        pageNum: bookmarkedPageNum,
       })
     });
     scrollRef.current.scrollTo({y: 0}); // scroll back to top
@@ -196,43 +209,31 @@ export default function PlayAudioScreen({ navigation, route }) {
   }
 
   const addNewBookmark = (bookmarkName) => {
-    setBookmarks(prev => [...prev, {
-      _id: Math.floor(Math.random() * 1000), // generate temp random id to add to bookmark flatlist
-      name: bookmarkName,
-      page: page.pageNum
-    }]);
-    // addBookmark(userInfo.user.id, book._id, bookmarkName, page.pageNum)
-    // .then(() => {
-    //   setBookmarks(prev => [...prev, {
-    //     _id: Math.floor(Math.random() * 1000), // generate temp random id to add to bookmark flatlist
-    //     name: bookmarkName,
-    //     page: page.pageNum
-    //   }]);
-    // })
-    // .catch((err) => console.log(err));
+    // setBookmarks(prev => [...prev, {
+    //   _id: Math.floor(Math.random() * 1000), // generate temp random id to add to bookmark flatlist
+    //   name: bookmarkName,
+    //   page: page.pageNum
+    // }]);
+    addBookmark(userInfo.user.id, book._id, bookmarkName, page.pageNum)
+    .then((data) => {
+      setBookmarks(data);
+    })
+    .catch((err) => console.log(err));
   }
 
   const removeOldBookmark = (bookmarkID) => {
-    let index = 0;
-    for (let i=0; i < bookmarks.length; i++) {
-      if (bookmarks[i]._id === bookmarkID) {
-        index = i;
-        break;
-      }
-    }
-    // correct bookmarkID will always be found
-    setBookmarks([...bookmarks.slice(0, index), ...bookmarks.slice(index+1, bookmarks.length)]);
-    // removeBookmark(userInfo.user.id, book._id, bookmarkID)
-    // .then(() => {
-    //   let index = 0;
-    //   for (let i=0; i < bookmarks.length; i++) {
-    //     if (bookmark._id === bookmarkID) {
-    //       index = i;
-    //       break;
-    //     }
+    // let index = 0;
+    // for (let i=0; i < bookmarks.length; i++) {
+    //   if (bookmarks[i]._id === bookmarkID) {
+    //     index = i;
+    //     break;
     //   }
-    //   setBookmarks([...bookmarks.slice(0, index), ...bookmarks.slice(index+1, bookmarks.length)]);
-    // })
+    // }
+    // // correct bookmarkID will always be found
+    // setBookmarks([...bookmarks.slice(0, index), ...bookmarks.slice(index+1, bookmarks.length)]);
+    removeBookmark(userInfo.user.id, book._id, bookmarkID)
+    .then((data) => setBookmarks(data))
+    .catch((err) => console.log(err));
   }
   
   return (
@@ -256,7 +257,7 @@ export default function PlayAudioScreen({ navigation, route }) {
           />
         </ScrollView>
         <View style={styles.bottomBar}>
-          <Text style={FONTS.h2}>Pg {page.pageNum}</Text>            
+          <Text style={FONTS.h2}>Pg {page.pageNum+1}</Text>            
           <View style={styles.controlBar}>   
             <View style={styles.controlIcons}>   
               <Pressable onPress={onPlayPressed} android_ripple={{color: 'gray', borderless: true}}>
