@@ -129,8 +129,8 @@ export const Bookmarks = ({ bookmarks, onBookmarkPressed, addNewBookmark, remove
         />
         <Pressable 
           onPress={onAddPressed} 
-          android_ripple={{color: 'dimgray'}} 
-          style={styles.addBookmarkButton}
+          // android_ripple={{color: 'dimgray'}} 
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1}, styles.addBookmarkButton]}
         >
           <Text style={styles.plusText}>+</Text>
         </Pressable>

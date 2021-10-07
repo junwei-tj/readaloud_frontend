@@ -7,6 +7,7 @@ import {
   View,
   StyleSheet,
   ScrollView,
+  ActivityIndicator
 } from 'react-native';
 import { Dimensions, BackHandler } from 'react-native';
 
@@ -17,8 +18,8 @@ import HighlightText from '@sanar/react-native-highlight-text';
 import SlidingUpPanel from 'rn-sliding-up-panel';
 
 import { COLORS, SIZES, FONTS } from '../constants/theme';
-import { book } from '../testBeeMovie'; // REMOVE AFTER INCORPORATING API
-import { progress } from '../testBookProgress'; // REMOVE AFTER INCORPORATING API
+// import { book } from '../testBeeMovie'; // REMOVE AFTER INCORPORATING API
+// import { progress } from '../testBookProgress'; // REMOVE AFTER INCORPORATING API
 import { Bookmarks } from '../components/Bookmarks';
 import { UserContext } from '../App';
 import { addBookmark, removeBookmark, updateAudiobookProgress } from '../components/APICaller';
@@ -83,6 +84,20 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingHorizontal: 16,
   },
+  // saving overlay
+  savingOverlay: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.offblack,
+    opacity: 0.75,
+    position: 'absolute',
+  },
+  savingText: {
+    ...FONTS.h2,
+    color: COLORS.white,
+  }
 });
 
 export default function PlayAudioScreen({ navigation, route }) {
@@ -97,6 +112,7 @@ export default function PlayAudioScreen({ navigation, route }) {
     sentences: bookPages[route.params.lastProgress.currentPage].body.match(sentenceRegex),
     pageNum: route.params.lastProgress.currentPage, // pageNum starts from 0
   });
+  const [saving, setSaving] = useState(false); // for showing saving progress overlay
   // const [page, setPage] = useState({
   //   sentenceNum: 30,
   //   pageText: book[0].page[progress.currentPage].body,
@@ -121,13 +137,17 @@ export default function PlayAudioScreen({ navigation, route }) {
   // function to handle exiting playback screen
   // will need to stop TTS and save user progress
   const exitScreen = () => { 
-      if (isPlaying) {
-          setIsPlaying(false);
-          Tts.stop();
-      }
-      updateAudiobookProgress(bookID, userID, page.pageNum)
-      .then(() => navigation.goBack())
-      .catch((err) => console.log(err));
+    setSaving(true);
+    if (isPlaying) {
+        setIsPlaying(false);
+        Tts.stop();
+    }
+    updateAudiobookProgress(bookID, userID, page.pageNum)
+    .then(() => {
+      setSaving(false);
+      navigation.goBack();
+    })
+    .catch((err) => console.log(err));
   }
 
   // eventlistener handler to highlight+play next sentence, and switch to next page if end of page is reached
@@ -242,7 +262,7 @@ export default function PlayAudioScreen({ navigation, route }) {
       <View style={styles.container}>
         <View style={styles.topBar}>
           <View style={styles.backIcon}>
-            <Pressable onPress={exitScreen} android_ripple={{color: 'gray', borderless: true}}>
+            <Pressable onPress={exitScreen} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
               <FontAwesomeIcon icon={faChevronCircleLeft} size={36} color={COLORS.offblack}/>
             </Pressable>
           </View>
@@ -260,17 +280,17 @@ export default function PlayAudioScreen({ navigation, route }) {
           <Text style={FONTS.h2}>Pg {page.pageNum+1}</Text>            
           <View style={styles.controlBar}>   
             <View style={styles.controlIcons}>   
-              <Pressable onPress={onPlayPressed} android_ripple={{color: 'gray', borderless: true}}>
+              <Pressable onPress={onPlayPressed} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
                   <FontAwesomeIcon icon={isPlaying ? faPauseCircle : faPlayCircle} size={48} color={'black'} />
               </Pressable>
             </View>
             <View style={styles.controlIcons}>   
-              <Pressable onPress={onStopPressed} android_ripple={{color: 'gray', borderless: true}}>
+              <Pressable onPress={onStopPressed} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
                 <FontAwesomeIcon icon={faStopCircle} size={48} color={'black'} />
               </Pressable>
             </View>
             <View style={styles.controlIcons}>   
-              <Pressable onPress={() => panelRef.current.show()} android_ripple={{color: 'gray', borderless: true}}>
+              <Pressable onPress={() => panelRef.current.show()} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
                 <FontAwesomeIcon icon={faBookmark} size={42} color={'black'}/>
               </Pressable>
             </View>                        
@@ -283,6 +303,10 @@ export default function PlayAudioScreen({ navigation, route }) {
         >
           <Bookmarks bookmarks={bookmarks} onBookmarkPressed={onBookmarkPressed} addNewBookmark={addNewBookmark} removeOldBookmark={removeOldBookmark}/>
         </SlidingUpPanel>
+        {saving && <View style={styles.savingOverlay}>
+          <ActivityIndicator size="large" color="gray" />
+          <Text style={styles.savingText}>Saving progress...</Text>
+        </View>}
       </View>
     </SafeAreaView>
   );
