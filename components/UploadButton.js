@@ -1,38 +1,47 @@
 import React, {useState, useContext} from 'react';
-import {Button, View, Text, TouchableHighlight} from 'react-native';
+import {Button, View, Text, TouchableHighlight, TextInput} from 'react-native';
 import {StyleSheet} from 'react-native';
 
 import DocumentPicker from 'react-native-document-picker';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faUserCircle} from '@fortawesome/free-solid-svg-icons';
 import {faFolderOpen} from '@fortawesome/free-solid-svg-icons';
+import {faTrash} from '@fortawesome/free-solid-svg-icons';
 
-import {COLORS, FONTS} from '../constants/theme';
+import {COLORS, FONTS, SIZES} from '../constants/theme';
 import {UserContext} from '../App';
 import {uploadPDF, getAudiobookTitles} from './APICaller';
 
 export default function UploadButton() {
-  const [singleFile, setSingleFile] = useState(null);
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
+  const [singleFile, setSingleFile] = useState(null);
+  const [fileName, setFileName] = useState('');
 
   const uploadFn = async () => {
     if (singleFile != null) {
-      //console.log(singleFile); singleFile obj = {fileCopyUri, name, size, type, uri}
-      console.log('uploading file');
+      if (fileName == '') {
+        alert('Enter Title');
+      } else {
+        //console.log(singleFile); singleFile obj = {fileCopyUri, name, size, type, uri}
+        console.log('uploading file');
 
-      // FormData object
-      // data.append(k,v)       // key for server to process
-      // fetch(url, [options] )
-      // options = { method: "POST", body: formData }
-      const data = new FormData();
-      data.append('id', userInfo.user.id);
-      data.append('pdf', singleFile);
-      uploadPDF(data)
-        .then(() => {
-          alert('file uploaded');
-          setSingleFile(null);
-        })
-        .catch(e => alert('did not upload file successfully', e));
+        // FormData object
+        // data.append(k,v)       // key for server to process
+        // fetch(url, [options] )
+        // options = { method: "POST", body: formData }
+        const data = new FormData();
+        data.append('id', userInfo.user.id);
+        data.append('pdf', singleFile);
+        data.append('bookTitle', fileName);
+
+        uploadPDF(data)
+          .then(() => {
+            alert('file uploaded');
+            setSingleFile(null);
+            setFileName('');
+          })
+          .catch(e => alert('did not upload file successfully', e));
+      }
     } else {
       alert('Please select a File');
     }
@@ -85,10 +94,12 @@ export default function UploadButton() {
       // end of fetch test
     */
 
-  const testAPI = async userId => {
-    getAudiobookTitles(userId)
-      .then(data => alert(data[0]['_id']))
-      .catch(e => console.log('testapi, error', e));
+  const Log = async fileName => {
+    // getAudiobookTitles(userId)
+    //   .then(data => alert(data[0]['_id']))
+    //   .catch(e => console.log('testapi, error', e));
+    console.log(fileName);
+    alert(fileName);
   };
   return (
     <View style={styles.container}>
@@ -103,11 +114,20 @@ export default function UploadButton() {
         </View>
       </TouchableHighlight>
 
-      <View style={styles.chosenFile}>
+      <View>
         {singleFile ? (
-          <View>
+          <View style={styles.chosenFile}>
             <Text> {singleFile.name} </Text>
-            <Button onPress={() => setSingleFile(null)} title="remove"></Button>
+
+            <TouchableHighlight
+              onPress={() => {
+                setSingleFile(null);
+                setFileName('');
+              }}>
+              <View style={styles.delete}>
+                <FontAwesomeIcon icon={faTrash} size={20} color={'black'} />
+              </View>
+            </TouchableHighlight>
           </View>
         ) : (
           <Text> {''} </Text>
@@ -115,8 +135,22 @@ export default function UploadButton() {
       </View>
 
       <View style={styles.uploadBtn}>
-        <Button title="Upload PDF" onPress={uploadFn} />
-        {/* <Button title="testAPI" onPress={() => testAPI(userInfo.user.id)} /> */}
+        {singleFile ? (
+          <View>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Title "
+              onChangeText={setFileName}
+              value={fileName}
+            />
+            <Button title="Upload PDF" onPress={uploadFn} />
+          </View>
+        ) : (
+          <View>
+            <Button title="Upload PDF" onPress={uploadFn} />
+            <Button title="testAPI" onPress={() => Log(fileName)} />
+          </View>
+        )}
       </View>
     </View>
   );
@@ -142,11 +176,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#d6eeff',
   },
+  input: {
+    height: 40,
+    borderWidth: 3,
+    paddingLeft: SIZES.padding,
+    marginHorizontal: 15,
+    borderColor: COLORS.saffron,
+    borderRadius: 20,
+    backgroundColor: COLORS.white,
+  },
   chosenFile: {
+    flexDirection: 'row',
     top: 30,
     justifyContent: 'space-between',
   },
   uploadBtn: {
-    top: 150,
+    top: 100,
   },
 });
