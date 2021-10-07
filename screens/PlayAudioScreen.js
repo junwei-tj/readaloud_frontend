@@ -7,7 +7,9 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
+  TextInput
 } from 'react-native';
 import { Dimensions, BackHandler } from 'react-native';
 
@@ -65,9 +67,22 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.saffron,
     paddingVertical: 8,
   },
-  pageText: {
-    fontSize: 24,
-    marginTop: 8,
+  // pageText: {
+  //   fontSize: 24,
+  //   marginTop: 8,
+  // },
+  pageNumButton: {
+    backgroundColor: COLORS.offblack,
+    width: 128,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    marginVertical: 8,
+  },
+  pageNumText: {
+    ...FONTS.h2,
+    color: COLORS.white,
   },
   slider: {
     width: '90%', 
@@ -97,10 +112,36 @@ const styles = StyleSheet.create({
   savingText: {
     ...FONTS.h2,
     color: COLORS.white,
-  }
+  },
+  // choose page modal
+  modalContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pageModal: {
+    width: 256,
+    height: 128,
+    backgroundColor: COLORS.saffron,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pageInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  pageSelectionText: {
+    ...FONTS.h2,
+    color: COLORS.offblack,
+  },
+  inputError: {
+    borderColor: 'crimson',
+    borderWidth: 1,
+  },
 });
 
-export default function PlayAudioScreen({ navigation, route }) {
+export default function PlayAudioScreen({ navigation, route }) { 
   const bookID = route.params.bookID;
   const bookPages = route.params.pages.page; // pages is an object with page (an array of the individual pages' text in a book), which is what I only need
 
@@ -113,6 +154,9 @@ export default function PlayAudioScreen({ navigation, route }) {
     pageNum: route.params.lastProgress.currentPage, // pageNum starts from 0
   });
   const [saving, setSaving] = useState(false); // for showing saving progress overlay
+  const [showPageModal, setShowPageModal] = useState(false); // for showing modal to specify page number to go to
+  const [chosenPage, setChosenPage] = useState(0); // for tracking page number input
+  const [pageInputError, setPageInputError] = useState(false); // for showing user page number is invalid
   // const [page, setPage] = useState({
   //   sentenceNum: 30,
   //   pageText: book[0].page[progress.currentPage].body,
@@ -127,12 +171,12 @@ export default function PlayAudioScreen({ navigation, route }) {
   const scrollRef = useRef(null);
 
   // overwrite Android's default back behaviour
-  useEffect(() => { 
-    BackHandler.addEventListener('hardwareBackPress', () => {
-      exitScreen();
-      return true; // other back actions (including system default) will not execute
-    });
-  }, []);
+  // useEffect(() => { 
+  //   BackHandler.addEventListener('hardwareBackPress', () => {
+  //     exitScreen();
+  //     return true; // other back actions (including system default) will not execute
+  //   });
+  // }, []);
 
   // function to handle exiting playback screen
   // will need to stop TTS and save user progress
@@ -142,12 +186,14 @@ export default function PlayAudioScreen({ navigation, route }) {
         setIsPlaying(false);
         Tts.stop();
     }
+    console.log("current progress:", page.pageNum);
     updateAudiobookProgress(bookID, userID, page.pageNum)
     .then(() => {
       setSaving(false);
       navigation.goBack();
     })
     .catch((err) => console.log(err));
+    return true; // other back actions (including system default) will not execute
   }
 
   // eventlistener handler to highlight+play next sentence, and switch to next page if end of page is reached
@@ -183,6 +229,9 @@ export default function PlayAudioScreen({ navigation, route }) {
   useEffect(() => { 
     Tts.removeAllListeners('tts-finish');
     Tts.addEventListener('tts-finish', advance);
+    // overwrite Android's default back behaviour
+    BackHandler.removeEventListener('hardwareBackPress', exitScreen);
+    BackHandler.addEventListener('hardwareBackPress', exitScreen);
   }, [page]);
 
   // function to handle play/pause
@@ -208,14 +257,13 @@ export default function PlayAudioScreen({ navigation, route }) {
 
   // function to switch to a bookmark's page
   const onBookmarkPressed = (bookmarkedPageNum) => {
-    const currPlaying = isPlaying;
-    if (currPlaying) {
+    if (isPlaying) {
       Tts.stop(); // stop current playback
     }
     setPage(prev => { // go to chosen page
       const bookmarkedPage = bookPages[bookmarkedPageNum].body;
       const newSentences = bookmarkedPage.match(sentenceRegex);
-      if (currPlaying) Tts.speak(newSentences[0].trim()); // play chosen page
+      if (isPlaying) Tts.speak(newSentences[0].trim()); // play chosen page if user was alr playing 
       return ({
         ...prev,
         sentenceNum: 0,
@@ -255,6 +303,32 @@ export default function PlayAudioScreen({ navigation, route }) {
     .then((data) => setBookmarks(data))
     .catch((err) => console.log(err));
   }
+
+  // function to go to user's chosen page
+  const goToChosenPage = () => {
+    let chosen = Number.parseInt(chosenPage) - 1; // -1 because actual page number starts from 0
+    if (chosen < 0 || chosen >= bookPages.length) {
+      setPageInputError(true);
+    } else {
+      if (isPlaying) {
+        Tts.stop(); // stop current playback
+      }
+      setPage(prev => { // go to chosen page
+        const chosenPageText = bookPages[chosen].body;
+        const newSentences = chosenPageText.match(sentenceRegex);
+        if (isPlaying) Tts.speak(newSentences[0].trim()); // play chosen page if user was alr playing 
+        return ({
+          ...prev,
+          sentenceNum: 0,
+          pageText: chosenPageText,
+          sentences: newSentences,
+          pageNum: chosen,
+        });
+      });
+      scrollRef.current.scrollTo({y: 0}); // scroll back to top
+      setShowPageModal(false);
+    }
+  }
   
   return (
     <SafeAreaView>
@@ -266,7 +340,7 @@ export default function PlayAudioScreen({ navigation, route }) {
               <FontAwesomeIcon icon={faChevronCircleLeft} size={36} color={COLORS.offblack}/>
             </Pressable>
           </View>
-          <Text style={FONTS.h1}>Title of Book</Text>
+          <Text style={FONTS.h1}>{route.params.bookTitle}</Text>
         </View>
         <ScrollView style={styles.textReader} ref={scrollRef}>
           <HighlightText 
@@ -277,11 +351,13 @@ export default function PlayAudioScreen({ navigation, route }) {
           />
         </ScrollView>
         <View style={styles.bottomBar}>
-          <Text style={FONTS.h2}>Pg {page.pageNum+1}</Text>            
+          <Pressable onPress={() => setShowPageModal(true)} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.pageNumButton]}>
+            <Text style={styles.pageNumText}>Pg {page.pageNum+1}</Text>        
+          </Pressable>
           <View style={styles.controlBar}>   
             <View style={styles.controlIcons}>   
               <Pressable onPress={onPlayPressed} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
-                  <FontAwesomeIcon icon={isPlaying ? faPauseCircle : faPlayCircle} size={48} color={'black'} />
+                <FontAwesomeIcon icon={isPlaying ? faPauseCircle : faPlayCircle} size={48} color={'black'} />
               </Pressable>
             </View>
             <View style={styles.controlIcons}>   
@@ -303,11 +379,39 @@ export default function PlayAudioScreen({ navigation, route }) {
         >
           <Bookmarks bookmarks={bookmarks} onBookmarkPressed={onBookmarkPressed} addNewBookmark={addNewBookmark} removeOldBookmark={removeOldBookmark}/>
         </SlidingUpPanel>
-        {saving && <View style={styles.savingOverlay}>
+      </View>
+      {/* Select Page Number Modal */}
+      {showPageModal && <View style={styles.savingOverlay}></View>}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showPageModal}
+        onRequestClose={() => setShowPageModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.pageModal}>
+            <View style={styles.pageInputRow}>
+              <TextInput
+                style={[ styles.pageSelectionText, pageInputError ? styles.inputError : {} ]}
+                onChangeText={setChosenPage}
+                defaultValue={`${page.pageNum+1}`}
+                keyboardType="numeric"
+                underlineColorAndroid="black"
+              />
+              <Text style={styles.pageSelectionText}>{`/ ${bookPages.length}`}</Text>
+            </View>
+            <Pressable onPress={goToChosenPage} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.pageNumButton]}>
+              <Text style={styles.pageNumText}>Go To Page</Text>        
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+      {/* Saving Progress Overlay */}
+      {saving && 
+        <View style={styles.savingOverlay}>
           <ActivityIndicator size="large" color="gray" />
           <Text style={styles.savingText}>Saving progress...</Text>
         </View>}
-      </View>
     </SafeAreaView>
   );
 }
