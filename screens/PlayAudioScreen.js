@@ -145,24 +145,24 @@ export default function PlayAudioScreen({ navigation, route }) {
   const bookID = route.params.bookID;
   const bookPages = route.params.pages.page; // pages is an object with page (an array of the individual pages' text in a book), which is what I only need
 
-  const [isPlaying, setIsPlaying] = useState(false);    
+  // ========== States that track data ==========
   const [bookmarks, setBookmarks] = useState(route.params.lastProgress.bookmarks);
   const [page, setPage] = useState({ // page holds all info relevant to the current page 
     sentenceNum: 0,
     pageText: bookPages[route.params.lastProgress.currentPage].body,
     sentences: bookPages[route.params.lastProgress.currentPage].body.match(sentenceRegex),
     pageNum: route.params.lastProgress.currentPage, // pageNum starts from 0
-  });
+  });  
+  const [chosenPage, setChosenPage] = useState(0); // for tracking page number input
+  const [backHandler, setBackHandler] = useState(null); // tracks last backhandler's event listener, if not we cannot remove the correct one
+
+  // ========== States that act as flags ==========
+  const [isPlaying, setIsPlaying] = useState(false);  
   const [saving, setSaving] = useState(false); // for showing saving progress overlay
   const [showPageModal, setShowPageModal] = useState(false); // for showing modal to specify page number to go to
-  const [chosenPage, setChosenPage] = useState(0); // for tracking page number input
   const [pageInputError, setPageInputError] = useState(false); // for showing user page number is invalid
-  // const [page, setPage] = useState({
-  //   sentenceNum: 30,
-  //   pageText: book[0].page[progress.currentPage].body,
-  //   sentences: book[0].page[progress.currentPage].body.match(sentenceRegex),
-  //   pageNum: progress.currentPage,
-  // });
+  const [refresh, setRefresh] = useState(false); // for refreshing bookmark list when bookmarks is updated
+  const [bookmarksActive, setBookmarksActive] = useState(false); // tracks if bookmarks is opened
 
   const { userInfo } = useContext(UserContext);
   const userID = "123123123124412"; // to replace with userInfo.user.id
@@ -170,23 +170,16 @@ export default function PlayAudioScreen({ navigation, route }) {
   const panelRef = useRef(null);
   const scrollRef = useRef(null);
 
-  // overwrite Android's default back behaviour
-  // useEffect(() => { 
-  //   BackHandler.addEventListener('hardwareBackPress', () => {
-  //     exitScreen();
-  //     return true; // other back actions (including system default) will not execute
-  //   });
-  // }, []);
-
   // function to handle exiting playback screen
   // will need to stop TTS and save user progress
   const exitScreen = () => { 
+    if (bookmarksActive) { return false }; // trigger sliding panel's (bookmarks' list) back action
+
     setSaving(true);
     if (isPlaying) {
         setIsPlaying(false);
         Tts.stop();
     }
-    console.log("current progress:", page.pageNum);
     updateAudiobookProgress(bookID, userID, page.pageNum)
     .then(() => {
       setSaving(false);
@@ -230,9 +223,11 @@ export default function PlayAudioScreen({ navigation, route }) {
     Tts.removeAllListeners('tts-finish');
     Tts.addEventListener('tts-finish', advance);
     // overwrite Android's default back behaviour
-    BackHandler.removeEventListener('hardwareBackPress', exitScreen);
-    BackHandler.addEventListener('hardwareBackPress', exitScreen);
-  }, [page]);
+    // BackHandler.removeListeners('hardwareBackPress', exitScreen);
+    // BackHandler.addEventListener('hardwareBackPress', exitScreen);
+    if (backHandler !== null) backHandler.remove();
+    setBackHandler(BackHandler.addEventListener('hardwareBackPress', exitScreen));
+  }, [page, isPlaying, bookmarksActive]);
 
   // function to handle play/pause
   const onPlayPressed = () => {
@@ -253,6 +248,11 @@ export default function PlayAudioScreen({ navigation, route }) {
     }));
     Tts.stop();
     scrollRef.current.scrollTo({y: 0}); // scroll back to top
+  }
+
+  const onBookmarksOpen = () => {
+    panelRef.current.show();
+    setBookmarksActive(true);
   }
 
   // function to switch to a bookmark's page
@@ -277,30 +277,20 @@ export default function PlayAudioScreen({ navigation, route }) {
   }
 
   const addNewBookmark = (bookmarkName) => {
-    // setBookmarks(prev => [...prev, {
-    //   _id: Math.floor(Math.random() * 1000), // generate temp random id to add to bookmark flatlist
-    //   name: bookmarkName,
-    //   page: page.pageNum
-    // }]);
-    addBookmark(userInfo.user.id, book._id, bookmarkName, page.pageNum)
+    addBookmark(userID, bookID, bookmarkName, page.pageNum)
     .then((data) => {
-      setBookmarks(data);
+      setBookmarks(data.bookmarks);
+      setRefresh(!refresh);
     })
     .catch((err) => console.log(err));
   }
 
   const removeOldBookmark = (bookmarkID) => {
-    // let index = 0;
-    // for (let i=0; i < bookmarks.length; i++) {
-    //   if (bookmarks[i]._id === bookmarkID) {
-    //     index = i;
-    //     break;
-    //   }
-    // }
-    // // correct bookmarkID will always be found
-    // setBookmarks([...bookmarks.slice(0, index), ...bookmarks.slice(index+1, bookmarks.length)]);
-    removeBookmark(userInfo.user.id, book._id, bookmarkID)
-    .then((data) => setBookmarks(data))
+    removeBookmark(userID, bookID, bookmarkID)
+    .then((data) => {
+      setBookmarks(data.bookmarks);
+      setRefresh(!refresh);
+    })
     .catch((err) => console.log(err));
   }
 
@@ -366,7 +356,7 @@ export default function PlayAudioScreen({ navigation, route }) {
               </Pressable>
             </View>
             <View style={styles.controlIcons}>   
-              <Pressable onPress={() => panelRef.current.show()} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
+              <Pressable onPress={onBookmarksOpen} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
                 <FontAwesomeIcon icon={faBookmark} size={42} color={'black'}/>
               </Pressable>
             </View>                        
@@ -375,9 +365,17 @@ export default function PlayAudioScreen({ navigation, route }) {
         <SlidingUpPanel 
           ref={panelRef}
           draggableRange={{top: 0.65*windowHeight, bottom: 0}}
+          allowDragging={false}
           friction={0.50}
+          onBottomReached={() => setBookmarksActive(false)}
         >
-          <Bookmarks bookmarks={bookmarks} onBookmarkPressed={onBookmarkPressed} addNewBookmark={addNewBookmark} removeOldBookmark={removeOldBookmark}/>
+          <Bookmarks 
+            bookmarks={bookmarks} 
+            onBookmarkPressed={onBookmarkPressed} 
+            addNewBookmark={addNewBookmark} 
+            removeOldBookmark={removeOldBookmark}
+            refresh={refresh}
+          />
         </SlidingUpPanel>
       </View>
       {/* Select Page Number Modal */}

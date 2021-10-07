@@ -64,7 +64,7 @@ const Bookmark = ({ name, page }) => {
 }
 
 // main component to render
-export const Bookmarks = ({ bookmarks, onBookmarkPressed, addNewBookmark, removeOldBookmark }) => {  
+export const Bookmarks = ({ bookmarks, onBookmarkPressed, addNewBookmark, removeOldBookmark, refresh }) => {  
   const [newBookmarkName, setNewBookmarkName] = useState("");
   const [addBookmarkError, setAddBookmarkError] = useState(false);
   const textInputRef = useRef(null);
@@ -117,6 +117,7 @@ export const Bookmarks = ({ bookmarks, onBookmarkPressed, addNewBookmark, remove
         data={bookmarks}
         renderItem={renderItem}
         keyExtractor={item => item._id}
+        extraData={refresh}
       />
       <View style={styles.addRow}>
         <TextInput 
