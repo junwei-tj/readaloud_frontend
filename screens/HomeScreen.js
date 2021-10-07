@@ -7,7 +7,9 @@ import {
   TextInput,
   View,
   Alert,
+  Modal,
   useColorScheme,
+  Pressable,
   ActivityIndicator,
   FlatList,
   TouchableOpacity,
@@ -20,17 +22,6 @@ import { COLORS, FONTS, SIZES } from '../constants/theme';
 
 export default function HomeScreen({ navigation }) {
 
-  useEffect(() => {
-    initialiseAllRequiredData();
-    console.log(userInfo);
-  }, [userInfo]);
-
-  useFocusEffect( //Reload flatlist data on screen focus
-    React.useCallback(() => {
-      initialiseAllRequiredData();
-    }, [])
-  );
-  
   const { userInfo } = useContext(UserContext);
   const [refresh, setRefresh] = useState(true);
 
@@ -41,8 +32,39 @@ export default function HomeScreen({ navigation }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredBooks, setFilteredBooks] = useState();//Used for displaying books 
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalText, setModalText] = useState("Downloading audiobook text...");
+
+  useEffect(() => {
+    initialiseAllRequiredData();
+    console.log(userInfo);
+    //clearAllLocalStorage();
+  }, [userInfo]);
+
+  useFocusEffect( //Reload flatlist data on screen focus
+    React.useCallback(() => {
+      initialiseAllRequiredData();
+    }, [])
+  );
+
+  
   async function initialiseAllRequiredData() {
     await loadAudiobookList();
+  }
+
+  //Function to clear local storage, consider putting in Settings Screen
+  async function clearAllLocalStorage() {
+    try {
+      let keys = [];
+        keys = await AsyncStorage.getAllKeys();
+        if (keys?.length) { //if there exists keys -> meaning there are saved audiobooks
+          await AsyncStorage.multiRemove(keys);
+        }
+        console.log("All local storage removed.");
+    } catch (e) {
+      console.log(error.message);
+      console.log("Local storage not cleared.")
+    }
   }
 
   // 1) Retrieval of audiobooks under user from the server
@@ -51,7 +73,7 @@ export default function HomeScreen({ navigation }) {
   async function loadAudiobookList(){
     try {
       // ===== Retrieval of audiobooks under user from the server =====
-      let titlesJSON = await getAudiobookTitles("123123123124412"); //Can replace with actual user or 110771401644785347942
+      let titlesJSON = await getAudiobookTitles(userInfo.user.id); //Can replace with actual user or 110771401644785347942
       let tempRetrievedArray = [];
       titlesJSON.forEach((item) => {
         tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.book_title});
@@ -89,10 +111,13 @@ export default function HomeScreen({ navigation }) {
   }
 
   const downloadAudiobook = async (bookID) => {
+    setModalVisible(true)
     let audiobookText = await getAudiobookText(bookID); //to replace with bookID or "61516bd4fa5f2e4fe410d358"
     try {
       const jsonValue = JSON.stringify(audiobookText);
       await AsyncStorage.setItem(bookID, jsonValue); //to replace with bookID
+      setModalText("Audiobook has been downloaded!")
+      initialiseAllRequiredData();
     } catch (e) {
       alert('Saving of audiobook failed, please try again!');
     }
@@ -124,7 +149,7 @@ export default function HomeScreen({ navigation }) {
         if (savedAudiobooks[i][0] == bookID){
           bookObject = JSON.parse(savedAudiobooks[i][1]);
           pages = bookObject[0];
-          lastProgress = await getAudiobookProgress(bookID, "123123123124412"); //to replace with userID or "61516bd4fa5f2e4fe410d358"
+          lastProgress = await getAudiobookProgress(bookID, userInfo.user.id); //to replace with userID or "61516bd4fa5f2e4fe410d358"
           break;
        }
       }
@@ -169,7 +194,6 @@ export default function HomeScreen({ navigation }) {
 
     const SavedBook = ({ bookID, bookTitle }) => (
       <TouchableOpacity style={styles.savedBook}
-        // onPress = {() => navigation.navigate('BookOptionsScreen', {bookID: bookID, bookTitle: bookTitle})} >
         onPress = {() => selectBook(bookID, bookTitle)} >
         <View>
           <Text style={styles.bookText}>{bookTitle}</Text>
@@ -193,7 +217,7 @@ export default function HomeScreen({ navigation }) {
               text: "OK!",
               onPress: () => {
                 downloadAudiobook(bookID);
-                initialiseAllRequiredData();
+                // initialiseAllRequiredData();
               }
             }
           ]
@@ -248,6 +272,29 @@ export default function HomeScreen({ navigation }) {
     )
   }
 
+  function renderModal(){
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {}}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>{modalText}</Text>
+            <Pressable
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => setModalVisible(!modalVisible)}
+            >
+              <Text style={styles.textStyle}>Yay!</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.background}>
       <StatusBar barStyle='dark-content' />
@@ -255,6 +302,7 @@ export default function HomeScreen({ navigation }) {
           {renderHeader(userInfo)}
         </View> 
         {renderBody()}
+        {renderModal()}
     </SafeAreaView>
   );
 }
@@ -323,4 +371,42 @@ const styles= StyleSheet.create({
     ...FONTS.h2, 
     color: COLORS.saffron,
   },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2
+  },
+  buttonClose: {
+    backgroundColor: "#2196F3",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center"
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center"
+  }
 })

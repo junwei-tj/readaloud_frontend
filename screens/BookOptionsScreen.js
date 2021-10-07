@@ -21,7 +21,8 @@ import {
   faChevronCircleLeft,
 } from '@fortawesome/free-solid-svg-icons';
 import {COLORS, SIZES, FONTS} from '../constants/theme';
-import { deleteAudiobook, updateAudiobookName, shareAudiobookFile } from '../components/APICaller';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { deleteAudiobookFile, updateAudiobookName, shareAudiobookFile } from '../components/APICaller';
 import SimpleModal from '../components/SimpleModal';
 import SlidingUpPanel from 'rn-sliding-up-panel';
 import {UserContext} from '../App';
@@ -31,6 +32,7 @@ export default function BookOptionsScreen({route, navigation}) {
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
   const { bookID, bookTitle, pages, lastProgress } = route.params; // Book selected retrieved from Home Screen
 
+  const [currentBookTitle, setCurrentBookTitle] = useState(bookTitle);
   // For bookmarks
   const panelRef = useRef(null);
   const [bookmarks, setBookmarks] = useState(lastProgress.bookmarks);
@@ -68,7 +70,7 @@ export default function BookOptionsScreen({route, navigation}) {
     navigation.navigate('PlayAudioScreen', 
                           {
                             bookID: bookID, 
-                            bookTitle: bookTitle, 
+                            bookTitle: currentBookTitle, 
                             pages: pages, 
                             lastProgress: lastProgress 
                           });
@@ -80,7 +82,7 @@ export default function BookOptionsScreen({route, navigation}) {
     navigation.navigate('PlayAudioScreen', 
                           {
                             bookID: bookID, 
-                            bookTitle: bookTitle, 
+                            bookTitle: currentBookTitle, 
                             pages: pages, 
                             lastProgress: lastProgress,
                             bookmark: item
@@ -130,6 +132,7 @@ export default function BookOptionsScreen({route, navigation}) {
           }
         ],
       );
+      setCurrentBookTitle(newName);
     } else { // Rename unsuccessful
       Alert.alert(
         "Oh No!", 
@@ -144,7 +147,8 @@ export default function BookOptionsScreen({route, navigation}) {
     }
   }
 
-  const deleteAudiobook = () => {
+  //COMPLETED
+  const deleteAudiobook = async() => {
     Alert.alert(
       bookTitle,
       "Are you sure you would like to delete this audiobook?",
@@ -154,10 +158,54 @@ export default function BookOptionsScreen({route, navigation}) {
           style: "cancel",
         },
         {
-          text: "Yes",
-          onPress: () => {
-            //TODO: Add delete implementation
-            //Alert.alert("Delete selected");
+          text: "Delete from Server",
+          onPress: async() => {
+            let response = await deleteAudiobookFile(bookID);
+            console.log(response);
+            if (response){ //Delete successful
+
+              await AsyncStorage.removeItem(bookID);
+
+              Alert.alert(
+                bookTitle,
+                "Deleting of audiobook from server was successful!",
+                [
+                  {
+                    text: "Yay!",
+                    style: "cancel",
+                  }
+                ],
+              );
+              navigation.goBack();
+            } else { //Delete unsuccessful
+              Alert.alert(
+                bookTitle,
+                "Deleting of audiobook was unsuccessful, please try again!",
+                [
+                  {
+                    text: "Back",
+                    style: "cancel",
+                  }
+                ],
+              );
+            }
+          }
+        },
+        {
+          text: "Delete Locally",
+          onPress: async() => {
+              await AsyncStorage.removeItem(bookID);
+              Alert.alert(
+                bookTitle,
+                "Deleting of audiobook locally was successful!",
+                [
+                  {
+                    text: "Yay!",
+                    style: "cancel",
+                  }
+                ],
+              );
+              navigation.goBack();
           }
         },
       ]
@@ -282,7 +330,7 @@ export default function BookOptionsScreen({route, navigation}) {
       <View style={styles.container}>
         {renderTopBar()}
         <View style={styles.innerContainer}>
-          <Text style={styles.innerContainerItems}>{bookTitle}</Text>
+          <Text style={styles.innerContainerItems}>{currentBookTitle}</Text>
         </View>
         {renderModal()}
         {renderOptionsMenu()}

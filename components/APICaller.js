@@ -70,7 +70,7 @@ export const updateAudiobookProgress = async (bookID, userID, currentPage) => {
   }
 };
 
-export const deleteAudiobook = async bookID => {
+export const deleteAudiobookFile = async bookID => {
   try {
     const {data} = await axios.delete(url + 'audiobooks/' + bookID);
     return data;
