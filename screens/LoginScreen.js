@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useRef, useContext, useState, useEffect } from 'react';
 import {
   SafeAreaView,
   StatusBar,
@@ -7,6 +7,8 @@ import {
   useColorScheme,
   StyleSheet,
   Image,
+  Animated,
+  ActivityIndicator,
 } from 'react-native';
 import {
   GoogleSignin,
@@ -47,7 +49,7 @@ const styles = StyleSheet.create({
   signInButton: { 
     width: '60%', 
     height: 48,
-    marginTop: 128, 
+    marginTop: 100, 
   }
 });
 
@@ -61,6 +63,7 @@ export default function Login({ navigation }) {
   // };
 
   const { setSignedIn, setUserInfo, setNotifications } = useContext(UserContext);
+  const [loadSplash, setLoadSplash] = useState(false);
 
   const signIn = async () => {
     try {
@@ -71,7 +74,12 @@ export default function Login({ navigation }) {
         setNotifications(res);
       }
       setUserInfo(userInfo);
-      setSignedIn(true);
+      setLoadSplash(!loadSplash);
+      // Allow user info to finish loading before setting signedIn to true
+      setTimeout(function() {
+        setSignedIn(true);
+      }, 5000);
+      
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled the login flow
@@ -88,6 +96,34 @@ export default function Login({ navigation }) {
     }
   };
 
+  const FadeInView = (props) => {
+    const fadeAnim = useRef(new Animated.Value(0)).current  // Initial value for opacity: 0
+  
+    useEffect(() => {
+      if(loadSplash == true){
+        Animated.timing(
+          fadeAnim,
+          {
+            toValue: 1,
+            duration: 2000,
+            useNativeDriver: true,
+          }
+        ).start();
+      }
+    }, [loadSplash])
+  
+    return (
+      <Animated.View
+        style={{
+          ...props.style,
+          opacity: fadeAnim,
+        }}
+      >
+        {props.children}
+      </Animated.View>
+    );
+  }
+
   return (
     <SafeAreaView>
       <StatusBar barStyle="dark-content" />
@@ -95,6 +131,13 @@ export default function Login({ navigation }) {
         <Image style={styles.logo} source={require("../images/audiobook.png")} />
         <Text style={styles.title}>ReadAloud</Text>
         <Text style={styles.caption}>Audiobooks Made Easy</Text>
+        <FadeInView style={{width: 250, height: 150, backgroundColor: COLORS.offblack, paddingTop: 40}}>
+          <ActivityIndicator
+            size = "large"
+            color = {COLORS.saffron}
+          />
+          <Text style={styles.caption}>Loading, please wait......</Text>
+        </FadeInView>
         <GoogleSigninButton
           style={styles.signInButton}
           size={GoogleSigninButton.Size.Wide}

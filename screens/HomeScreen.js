@@ -12,7 +12,7 @@ import {
   FlatList,
   TouchableOpacity,
 } from 'react-native';
-
+import { useFocusEffect } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../App';
 import { getAudiobookTitles, getAudiobookText, getAudiobookProgress } from '../components/APICaller';
@@ -24,6 +24,12 @@ export default function HomeScreen({ navigation }) {
     initialiseAllRequiredData();
     console.log(userInfo);
   }, [userInfo]);
+
+  useFocusEffect( //Reload flatlist data on screen focus
+    React.useCallback(() => {
+      initialiseAllRequiredData();
+    }, [])
+  );
   
   const { userInfo } = useContext(UserContext);
   const [refresh, setRefresh] = useState(true);
@@ -188,7 +194,6 @@ export default function HomeScreen({ navigation }) {
               onPress: () => {
                 downloadAudiobook(bookID);
                 initialiseAllRequiredData();
-                setRefresh(!refresh);
               }
             }
           ]
@@ -215,11 +220,13 @@ export default function HomeScreen({ navigation }) {
           </View>
 
           <View style={styles.booklist}>
+          {console.log("rerendering")}
             { !filteredBooks ? 
               <ActivityIndicator
                 size = "large"
                 color = {COLORS.saffron}
-              /> :
+                /> : (filteredBooks?.length) ? 
+                
               <FlatList
                   data={filteredBooks}
                   renderItem={renderItem}
@@ -227,7 +234,14 @@ export default function HomeScreen({ navigation }) {
                   numColumns={2}
                   columnWrapperStyle={{justifyContent: "space-between"}}
                   extraData = {refresh}
-              /> 
+              /> : 
+              <View
+              style= {{alignItems: "center", paddingTop: SIZES.height/3.8, paddingHorizontal: SIZES.padding2}}>
+              <Text 
+                style={[{ textAlign: "center"}, styles.saffronFont]}>
+                No audiobooks yet, go ahead and upload your first audiobook! :) 
+              </Text>
+              </View>
             }
           </View>
       </View>
@@ -308,5 +322,5 @@ const styles= StyleSheet.create({
   saffronFont:{
     ...FONTS.h2, 
     color: COLORS.saffron,
-  }
+  },
 })
