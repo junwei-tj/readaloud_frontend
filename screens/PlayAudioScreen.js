@@ -148,10 +148,10 @@ export default function PlayAudioScreen({ navigation, route }) {
   // ========== States that track data ==========
   const [bookmarks, setBookmarks] = useState(route.params.lastProgress.bookmarks);
   const [page, setPage] = useState({ // page holds all info relevant to the current page 
-    sentenceNum: 0,
-    pageText: bookPages[route.params.lastProgress.currentPage].body,
-    sentences: bookPages[route.params.lastProgress.currentPage].body.match(sentenceRegex),
-    pageNum: route.params.lastProgress.currentPage, // pageNum starts from 0
+    sentenceNum: route.params.lastProgress.currentSentence, // sentence number starts from 1
+    pageText: bookPages[route.params.lastProgress.currentPage-1].body,
+    sentences: bookPages[route.params.lastProgress.currentPage-1].body.match(sentenceRegex),
+    pageNum: route.params.lastProgress.currentPage, // pageNum starts from 1
   });  
   const [chosenPage, setChosenPage] = useState(0); // for tracking page number input
   const [backHandler, setBackHandler] = useState(null); // tracks last backhandler's event listener, if not we cannot remove the correct one
@@ -165,7 +165,7 @@ export default function PlayAudioScreen({ navigation, route }) {
   const [bookmarksActive, setBookmarksActive] = useState(false); // tracks if bookmarks is opened
 
   const { userInfo } = useContext(UserContext);
-  const userID = "123123123124412"; // to replace with userInfo.user.id
+  const userID = userInfo.user.id; 
 
   const panelRef = useRef(null);
   const scrollRef = useRef(null);
@@ -180,7 +180,7 @@ export default function PlayAudioScreen({ navigation, route }) {
         setIsPlaying(false);
         Tts.stop();
     }
-    updateAudiobookProgress(bookID, userID, page.pageNum)
+    updateAudiobookProgress(bookID, userID, page.pageNum, page.sentenceNum)
     .then(() => {
       setSaving(false);
       navigation.goBack();
@@ -191,10 +191,11 @@ export default function PlayAudioScreen({ navigation, route }) {
 
   // eventlistener handler to highlight+play next sentence, and switch to next page if end of page is reached
   const advance = () => { 
-    if (page.sentences[page.sentenceNum+1] !== undefined) {
+    // sentence and page numbers start from 1, so don't +1 for array indexing
+    if (page.sentences[page.sentenceNum] !== undefined) {
       // go to next sentence            
       setPage(prev => {
-        Tts.speak(prev.sentences[prev.sentenceNum+1].trim());
+        Tts.speak(prev.sentences[prev.sentenceNum].trim());
         return ({
           ...prev,
           sentenceNum: prev.sentenceNum+1,
@@ -203,11 +204,11 @@ export default function PlayAudioScreen({ navigation, route }) {
     } else {
       // advance to next page
       setPage(prev => {
-        const nextPage = bookPages[prev.pageNum+1].body;
+        const nextPage = bookPages[prev.pageNum].body;
         const newSentences = nextPage.match(sentenceRegex);
         Tts.speak(newSentences[0].trim()); 
         return ({
-          sentenceNum: 0,
+          sentenceNum: 1,
           pageText: nextPage,
           sentences: newSentences,
           pageNum: prev.pageNum+1,
@@ -223,8 +224,6 @@ export default function PlayAudioScreen({ navigation, route }) {
     Tts.removeAllListeners('tts-finish');
     Tts.addEventListener('tts-finish', advance);
     // overwrite Android's default back behaviour
-    // BackHandler.removeListeners('hardwareBackPress', exitScreen);
-    // BackHandler.addEventListener('hardwareBackPress', exitScreen);
     if (backHandler !== null) backHandler.remove();
     setBackHandler(BackHandler.addEventListener('hardwareBackPress', exitScreen));
   }, [page, isPlaying, bookmarksActive]);
@@ -232,7 +231,7 @@ export default function PlayAudioScreen({ navigation, route }) {
   // function to handle play/pause
   const onPlayPressed = () => {
     if (!isPlaying) { // if not previously playing, play audio
-      Tts.speak(page.sentences[page.sentenceNum].trim());
+      Tts.speak(page.sentences[page.sentenceNum-1].trim()); // sentence number starts from 1
     } else { // if previously playing audio, stop audio
       Tts.stop();
     }
@@ -244,7 +243,7 @@ export default function PlayAudioScreen({ navigation, route }) {
     setIsPlaying(false);
     setPage(prev => ({
       ...prev,
-      sentenceNum: 0,
+      sentenceNum: 1, // sentence number starts from 1
     }));
     Tts.stop();
     scrollRef.current.scrollTo({y: 0}); // scroll back to top
@@ -261,12 +260,12 @@ export default function PlayAudioScreen({ navigation, route }) {
       Tts.stop(); // stop current playback
     }
     setPage(prev => { // go to chosen page
-      const bookmarkedPage = bookPages[bookmarkedPageNum].body;
+      const bookmarkedPage = bookPages[bookmarkedPageNum-1].body;
       const newSentences = bookmarkedPage.match(sentenceRegex);
       if (isPlaying) Tts.speak(newSentences[0].trim()); // play chosen page if user was alr playing 
       return ({
         ...prev,
-        sentenceNum: 0,
+        sentenceNum: 1,
         pageText: bookmarkedPage,
         sentences: newSentences,
         pageNum: bookmarkedPageNum,
@@ -296,20 +295,20 @@ export default function PlayAudioScreen({ navigation, route }) {
 
   // function to go to user's chosen page
   const goToChosenPage = () => {
-    let chosen = Number.parseInt(chosenPage) - 1; // -1 because actual page number starts from 0
-    if (chosen < 0 || chosen >= bookPages.length) {
+    let chosen = Number.parseInt(chosenPage);
+    if (chosen < 1 || chosen > bookPages.length) {
       setPageInputError(true);
     } else {
       if (isPlaying) {
         Tts.stop(); // stop current playback
       }
       setPage(prev => { // go to chosen page
-        const chosenPageText = bookPages[chosen].body;
+        const chosenPageText = bookPages[chosen-1].body;
         const newSentences = chosenPageText.match(sentenceRegex);
         if (isPlaying) Tts.speak(newSentences[0].trim()); // play chosen page if user was alr playing 
         return ({
           ...prev,
-          sentenceNum: 0,
+          sentenceNum: 1,
           pageText: chosenPageText,
           sentences: newSentences,
           pageNum: chosen,
@@ -317,6 +316,7 @@ export default function PlayAudioScreen({ navigation, route }) {
       });
       scrollRef.current.scrollTo({y: 0}); // scroll back to top
       setShowPageModal(false);
+      setPageInputError(false);
     }
   }
   
@@ -336,13 +336,14 @@ export default function PlayAudioScreen({ navigation, route }) {
           <HighlightText 
             style={styles.textStyle}
             highlightStyle={{ backgroundColor: COLORS.saffron }}
-            searchWords={[page.sentences[page.sentenceNum].trim()]}
+            searchWords={[page.sentences[page.sentenceNum-1].trim()]}
             textToHighlight={page.pageText}
+            caseSensitive={true}
           />
         </ScrollView>
         <View style={styles.bottomBar}>
           <Pressable onPress={() => setShowPageModal(true)} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.pageNumButton]}>
-            <Text style={styles.pageNumText}>Pg {page.pageNum+1}</Text>        
+            <Text style={styles.pageNumText}>Pg {page.pageNum}</Text>        
           </Pressable>
           <View style={styles.controlBar}>   
             <View style={styles.controlIcons}>   
@@ -392,7 +393,7 @@ export default function PlayAudioScreen({ navigation, route }) {
               <TextInput
                 style={[ styles.pageSelectionText, pageInputError ? styles.inputError : {} ]}
                 onChangeText={setChosenPage}
-                defaultValue={`${page.pageNum+1}`}
+                defaultValue={`${page.pageNum}`}
                 keyboardType="numeric"
                 underlineColorAndroid="black"
               />

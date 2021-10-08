@@ -58,11 +58,11 @@ export const getAudiobookProgress = async (bookID, userID) => {
   }
 };
 
-export const updateAudiobookProgress = async (bookID, userID, currentPage) => {
+export const updateAudiobookProgress = async (bookID, userID, currentPage, currentSentence) => {
   try {
     const {data} = await axios.put(
       url + 'audiobooks/' + bookID + '/progress/?userid=' + userID,
-      {current_page: currentPage},
+      {current_page: currentPage, current_sentence: currentSentence},
     );
     return data;
   } catch (error) {
