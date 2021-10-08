@@ -12,7 +12,7 @@ import {
   TextInput
 } from 'react-native';
 import { Dimensions, BackHandler } from 'react-native';
-
+import { StackActions } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronCircleLeft, faPlayCircle, faPauseCircle, faStopCircle, faBookmark } from '@fortawesome/free-solid-svg-icons';
 import Tts from 'react-native-tts';
@@ -181,7 +181,8 @@ export default function PlayAudioScreen({ navigation, route }) {
     updateAudiobookProgress(bookID, userID, page.pageNum, page.sentenceNum)
     .then(() => {
       setSaving(false);
-      navigation.goBack();
+      const popAction = StackActions.pop(2);
+      navigation.dispatch(popAction);
     })
     .catch((err) => console.log(err));
     return true; // other back actions (including system default) will not execute
@@ -227,7 +228,9 @@ export default function PlayAudioScreen({ navigation, route }) {
 
     return function cleanup() { // remove when exiting
       Tts.removeAllListeners('tts-finish');
-      backHandler.remove();
+      if (backHandler !== null){
+        backHandler.remove();
+      }
     }
   }, [page, isPlaying, bookmarksActive]);
 

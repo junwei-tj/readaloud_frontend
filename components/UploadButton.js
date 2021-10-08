@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   bottomHalf: {
-    top: 100,
+    top: 70,
   },
   uploadButton: {
     top: 20,

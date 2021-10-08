@@ -1,4 +1,4 @@
-import React, {useContext, useEffect} from 'react';
+import React, {useContext} from 'react';
 import {
   SafeAreaView,
   StatusBar,
@@ -12,11 +12,8 @@ import {
 } from 'react-native';
 
 import {UserContext} from '../App';
-import {StackActions} from '@react-navigation/native';
+import {StackActions, CommonActions} from '@react-navigation/native';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
-
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faUserCircle} from '@fortawesome/free-solid-svg-icons';
 import {FONTS, COLORS} from '../constants/theme';
 
 export default function SettingsScreen({navigation}) {
@@ -29,18 +26,19 @@ export default function SettingsScreen({navigation}) {
   const {setSignedIn, userInfo, setUserInfo, notifications} =
     useContext(UserContext);
 
-  useEffect(() => {
-    console.log('1: ' + notifications);
-  }, []);
-
-  console.log('2: ' + notifications);
-
   const signOut = async () => {
     try {
       await GoogleSignin.signOut();
       setSignedIn(false);
       setUserInfo(null); // Remember to remove the user from your app's state as well
-      navigation.dispatch(StackActions.popToTop());
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes:[
+            {name: "HomeScreenStack"}
+          ]
+        })
+      )
     } catch (error) {
       console.error(error);
     }
@@ -51,28 +49,30 @@ export default function SettingsScreen({navigation}) {
     const photoSource = userInfo
       ? userInfo.user.photo
       : 'https://www.winhelponline.com/blog/wp-content/uploads/2017/12/user.png';
-    console.log('defaultPhotoSource is: ' + photoSource);
+    //console.log('defaultPhotoSource is: ' + photoSource);
     return photoSource;
   }
 
-  function renderNotification(notifications) {
-    console.log('notif obj: ' + JSON.stringify(notifications) + '\n');
-    console.log(JSON.stringify(notifications).notifications);
-    // if (notifications != null) {
-    //   let viewArray = [];
-    //   for (let i = 0; i < notifications.length; i++) {
-    //     viewArray.push(
-    //       <View key={i}>
-    //         <View style={styles.innerNotificationContainer}>
-    //           <Text style={styles.notificationTextStyle}>viewArray[i]</Text>
-    //         </View>
-    //       </View>,
-    //     );
-    //   }
-    //   return {viewArray};
-    // }
-
-    return;
+  function renderNotifications() {
+    if (notifications.notifications?.length) {
+      let viewArray = [];
+      for (let i = 0; i < notifications.notifications.length; i++) {
+        viewArray.push(
+          <View key={i}>
+            <View style={styles.innerNotificationContainer}>
+              <Text style={styles.notificationTextStyle}>{notifications.notifications[i]}</Text>
+            </View>
+          </View>,
+        );
+      }
+      return viewArray;
+    } else {
+      return (
+        <View style={styles.innerNotificationContainer}>
+            <Text style={styles.notificationTextStyle}>No new notifications!</Text>
+        </View>
+      );
+    }
   }
 
   return (
@@ -91,11 +91,16 @@ export default function SettingsScreen({navigation}) {
 
       <Text style={styles.name}>{userInfo ? userInfo.user.name : null} </Text>
 
-      <Text style={styles.notificationTitleSyle}>Notification Centre</Text>
+      <Text style={styles.notificationTitleSyle}>New Notifications</Text>
 
       <ScrollView style={styles.outerNotificationContainer}>
-        {/* {renderNotification(userInfo)} */}
-        <Text style={styles.innerNotificationContainer}>
+        
+        {notifications ? renderNotifications() : 
+        <View style={styles.innerNotificationContainer}>
+            <Text style={styles.notificationTextStyle}>No new notifications!</Text>
+        </View>}
+
+        {/* <Text style={styles.innerNotificationContainer}>
           <Text style={styles.notificationTextStyle}>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum
             aliquet malesuada turpis quis ullamcorper.' + 'Donec pharetra
@@ -114,7 +119,7 @@ export default function SettingsScreen({navigation}) {
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum
             aliquet malesuada turpis quis ullamcorper.' + 'Donec pharetra
           </Text>
-        </Text>
+        </Text> */}
       </ScrollView>
       <View style={styles.buttonContainer}>
         <Button
@@ -163,9 +168,10 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 80 / 2,
-    borderWidth: 10,
+    borderWidth: 5,
     borderColor: 'white',
     alignSelf: 'center',
+    marginTop: 50
   },
   outerNotificationContainer: {
     marginTop: 10,
@@ -173,9 +179,9 @@ const styles = StyleSheet.create({
     height: '50%',
   },
   innerNotificationContainer: {
-    borderWidth: 5,
+    borderWidth: 3,
     borderColor: 'grey',
-    borderRadius: 20,
+    borderRadius: 10,
     padding: 10,
     marginBottom: 10,
   },

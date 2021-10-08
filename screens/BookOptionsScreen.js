@@ -9,6 +9,7 @@ import {
   useColorScheme,
   StyleSheet,
   Modal,
+  TextInput,
   Pressable,
 } from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -31,18 +32,80 @@ export default function BookOptionsScreen({route, navigation}) {
 
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
   const { bookID, bookTitle, pages, lastProgress } = route.params; // Book selected retrieved from Home Screen
-
   const [currentBookTitle, setCurrentBookTitle] = useState(bookTitle);
+
   // For bookmarks
   const panelRef = useRef(null);
   const [bookmarks, setBookmarks] = useState(lastProgress.bookmarks);
 
   // States required for modal
   const [option, setOption] = useState("");
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const changeModalVisible = (bool) =>{
-    setIsModalVisible(bool);
+  const [input, setInput] = useState();
+  const [modalVisible, setModalVisible] = useState(false);
+  //const [modalText, setModalText] = useState("Downloading audiobook text...");
+  // const [isModalVisible, setIsModalVisible] = useState(false);
+  // const changeModalVisible = (bool) =>{
+  //   setIsModalVisible(bool);
+  // }
+
+  function renderModal(){
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {}}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+          {option === "share" ?
+          <>
+            <Text style = {styles.modalText}>
+              Who would you like to share {bookTitle} with:
+            </Text>
+            <TextInput 
+              style = {styles.input}
+              placeholder = "Enter email of person to share to"
+              onChangeText = {(val) => setInput(val)} 
+            />
+          </> : <>
+            <Text style = {styles.modalText}>
+              What would you like to rename {bookTitle} to:
+            </Text> 
+            <TextInput 
+            style = {styles.input}
+            placeholder = "Enter new name of audiobook"
+            onChangeText = {(val) => setInput(val)} 
+            />
+          </>}
+            <View style ={styles.buttonsView}>
+            <Pressable
+              style = {styles.activeButton}
+              onPress={() => {
+                setModalVisible(!modalVisible);
+                setInput(null);
+              }}
+            >
+              <Text>Cancel</Text>
+            </Pressable>
+            <Pressable
+              style = {!Boolean(input) ? styles.inactiveButton : styles.activeButton}
+              onPress={() => {
+                option === "share" ? shareAudiobook(input) : renameAudiobook(input);
+                setModalVisible(!modalVisible);
+                setInput(null);
+              }}
+              disabled = {!Boolean(input)}
+            >
+              <Text>Confirm</Text>
+            </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
   }
+
 
   //Bookmark rendered in Flatlist
   const Bookmark = ({ name, page }) => {
@@ -79,7 +142,8 @@ export default function BookOptionsScreen({route, navigation}) {
   //COMPLETED
   const playAudiobookFromBookmark = (item) => {
     panelRef.current.hide();
-    navigation.navigate('PlayAudioScreen', 
+    setTimeout(function() {
+      navigation.navigate('PlayAudioScreen', 
                           {
                             bookID: bookID, 
                             bookTitle: currentBookTitle, 
@@ -87,6 +151,7 @@ export default function BookOptionsScreen({route, navigation}) {
                             lastProgress: lastProgress,
                             bookmark: item
                           });
+    }, 800);
   }
 
   //COMPLETED
@@ -231,23 +296,24 @@ export default function BookOptionsScreen({route, navigation}) {
     )
   }
 
-  function renderModal(){
-    return (
-      <Modal
-        transparent = {true}
-        animationType = 'fade'
-        visible = {isModalVisible}
-        onRequestClose = {() => changeModalVisible(false)}>
-          <SimpleModal
-            changeModalVisible={changeModalVisible}
-            //setData = {setData}
-            renameAudiobook={renameAudiobook}
-            shareAudiobook={shareAudiobook}
-            bookTitle={bookTitle}
-            option={option} />
-      </Modal>
-    )
-  }
+  // function renderModal(){
+  //   return (
+  //     <Modal
+  //       transparent = {true}
+  //       animationType = 'fade'
+  //       visible = {isModalVisible}
+  //       onRequestClose = {() => changeModalVisible(false)}>
+  //         <SimpleModal
+  //           changeModalVisible={changeModalVisible}
+  //           isModalVisible={isModalVisible}
+  //           //setData = {setData}
+  //           renameAudiobook={renameAudiobook}
+  //           shareAudiobook={shareAudiobook}
+  //           bookTitle={bookTitle}
+  //           option={option} />
+  //     </Modal>
+  //   )
+  // }
 
   function renderBookmarks(){
     return (
@@ -292,7 +358,7 @@ export default function BookOptionsScreen({route, navigation}) {
         style= {({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.options2]}
         onPress={() => {
           setOption("share");
-          changeModalVisible(true);
+          setModalVisible(true);
         }}>
         <View style={styles.options}>
           <FontAwesomeIcon icon={faShare} size={30} color={'white'} />
@@ -304,7 +370,7 @@ export default function BookOptionsScreen({route, navigation}) {
         style= {({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.options2]}
         onPress={() => {
           setOption("rename");
-          changeModalVisible(true);
+          setModalVisible(true);
         }}>
         <View style={styles.options}>
           <FontAwesomeIcon icon={faEdit} size={30} color={'white'} />
@@ -332,10 +398,11 @@ export default function BookOptionsScreen({route, navigation}) {
         <View style={styles.innerContainer}>
           <Text style={styles.innerContainerItems}>{currentBookTitle}</Text>
         </View>
-        {renderModal()}
+        {/* {renderModal()} */}
         {renderOptionsMenu()}
         {renderBookmarks()}
       </View>
+      {renderModal()}
     </SafeAreaView>
   );
 }
@@ -425,5 +492,66 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.offblack,
     borderTopColor: COLORS.saffron,
     borderTopWidth: 1,
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center"
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2
+  },
+  buttonClose: {
+    backgroundColor: "#2196F3",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#777",
+    padding: 8,
+    margin: 10, 
+    width: 250,
+    marginBottom: 20,
+  },
+  buttonsView: {
+    width: "100%",
+    flexDirection: "row"
+  },
+  activeButton: {
+    marginHorizontal: 30,
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    backgroundColor: "#2196F3",
+  },
+  inactiveButton: {
+    marginHorizontal: 30,
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    backgroundColor: COLORS.grey,
+    opacity: 0.7,
+
   },
 });

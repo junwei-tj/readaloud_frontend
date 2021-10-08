@@ -29,9 +29,21 @@ export const uploadPDF = async PDFobject => {
 
 //========== APIS for Audiobooks ==========//
 
-export const getAudiobookTitles = async userID => {
+export const getAudiobookTitles = async (userID, option) => {
   try {
-    const {data} = await axios.get(url + 'audiobooks/titles/?userid=' + userID);
+    let extraParam;
+    switch (option) {
+      case 1:
+        extraParam = "&type=owned";
+        break;
+      case 2:
+        extraParam = "&type=shared";
+        break;
+      default:
+        extraParam="";
+        break;
+    }
+    const {data} = await axios.get(url + 'audiobooks/titles/?userid=' + userID + extraParam);
     return data;
   } catch (error) {
     console.log(error.message);

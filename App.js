@@ -114,7 +114,8 @@ export default function App() {
               tabBarActiveTintColor: 'black',
               tabBarActiveBackgroundColor: 'lightgrey',
               tabBarInactiveTintColor: 'gray',
-              tabBarShowLabel: false
+              tabBarShowLabel: false,
+              tabBarHideOnKeyboard: true,
             })}>
             <Tab.Screen
               name="Home"

@@ -1,3 +1,5 @@
+//Not currently used anymore
+
 import React, {useState} from 'react';
 import {
   View,
@@ -70,7 +72,7 @@ const styles = StyleSheet.create({
     justifyContent:'center'
   },
   modal:{
-      height: 170,
+      height: 200,
       width: SIZES.width - 80,
       paddingTop:10,
       backgroundColor:"white",

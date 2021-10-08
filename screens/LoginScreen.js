@@ -78,7 +78,7 @@ export default function Login({ navigation }) {
       // Allow user info to finish loading before setting signedIn to true
       setTimeout(function() {
         setSignedIn(true);
-      }, 5000);
+      }, 4000);
       
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {

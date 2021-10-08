@@ -14,6 +14,11 @@ import {
   FlatList,
   TouchableOpacity,
 } from 'react-native';
+import {
+  faCloudDownloadAlt,
+  faUserFriends,
+} from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import { useFocusEffect } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../App';
@@ -25,7 +30,6 @@ export default function HomeScreen({ navigation }) {
   const { userInfo, notifications } = useContext(UserContext);
   const [refresh, setRefresh] = useState(true);
 
-  const [retreivedBooks, setRetreivedBooks] = useState(); //All audiobook details
   const [savedAudiobooks, setSavedAudiobooks] = useState([]); //Saved audiobook details (including text)
 
   const [audiobookList, setAudiobookList] = useState([]); //Used for holding list of audiobook titles
@@ -37,8 +41,6 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     initialiseAllRequiredData();
-    console.log(userInfo);
-    console.log(notifications);
     //clearAllLocalStorage();
   }, [userInfo]);
 
@@ -73,12 +75,21 @@ export default function HomeScreen({ navigation }) {
   async function loadAudiobookList(){
     try {
       // ===== Retrieval of audiobooks under user from the server =====
-      let titlesJSON = await getAudiobookTitles(userInfo.user.id); //Can replace with actual user or 110771401644785347942
+      let titlesJSON = await getAudiobookTitles(userInfo.user.id, 0); //Can replace with actual user or 110771401644785347942
       let tempRetrievedArray = [];
       titlesJSON.forEach((item) => {
-        tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.book_title});
+        tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.book_title, owned: true});
       })
-      setRetreivedBooks(tempRetrievedArray);
+ 
+      // let titlesJSONOwned = await getAudiobookTitles(userInfo.user.id, 1); //Can replace with actual user or 110771401644785347942
+      // let tempRetrievedArray = [];
+      // titlesJSONOwned.forEach((item) => {
+      //   tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.book_title, owned: true});
+      // })
+      // let titlesJSONShared = await getAudiobookTitles(userInfo.user.id, 2); //Can replace with actual user or 110771401644785347942
+      // titlesJSONShared.forEach((item) => {
+      //   tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.book_title, owned: false});
+      // })
 
       // ===== Retrieval of titles of saved audiobooks =====
       let jsonValue = [];
@@ -98,9 +109,9 @@ export default function HomeScreen({ navigation }) {
       // ===== Pushing to audiobookList, and marking if book is saved =====
       for (let i = 0; i < tempRetrievedArray.length; i++){
         if (!savedAudiobookTitles.includes(tempRetrievedArray[i].bookID)){
-          allTempBooks.push({bookID: tempRetrievedArray[i].bookID, bookTitle: tempRetrievedArray[i].bookTitle, saved: false})
+          allTempBooks.push({bookID: tempRetrievedArray[i].bookID, bookTitle: tempRetrievedArray[i].bookTitle, saved: false, owned: tempRetrievedArray[i].owned})
         } else {
-          allTempBooks.push({bookID: tempRetrievedArray[i].bookID, bookTitle: tempRetrievedArray[i].bookTitle, saved: true})
+          allTempBooks.push({bookID: tempRetrievedArray[i].bookID, bookTitle: tempRetrievedArray[i].bookTitle, saved: true, owned: tempRetrievedArray[i].owned})
         }
       }
       setAudiobookList(allTempBooks);
@@ -192,21 +203,27 @@ export default function HomeScreen({ navigation }) {
 
   function renderBody(){
 
-    const SavedBook = ({ bookID, bookTitle }) => (
+    const SavedBook = ({ bookID, bookTitle, owned }) => (
       <TouchableOpacity style={styles.savedBook}
         onPress = {() => selectBook(bookID, bookTitle)} >
         <View>
           <Text style={styles.bookText}>{bookTitle}</Text>
-          <Text style={styles.bookText}>{bookID}</Text>
         </View>
+        { !owned ? 
+          <FontAwesomeIcon 
+            icon={faUserFriends} 
+            size={25} 
+            color={'white'}
+            style={{position:"absolute", bottom: 10, right: 10, alignSelf:"flex-end"}} /> : null
+        }
       </TouchableOpacity>
     )
 
-    const UnsavedBook = ({ bookID, bookTitle }) => (
+    const UnsavedBook = ({ bookID, bookTitle, owned }) => (
       <TouchableOpacity style={styles.unsavedBook}
         onPress = {() => Alert.alert(
           "Download of Audiobook Text",
-          "Would you like to download the audiobook text to your phone?",
+          "Audiobook text needs to be downloaded from the server. Proceed to download to local storage?",
           [
             {
               text: "No",
@@ -217,23 +234,33 @@ export default function HomeScreen({ navigation }) {
               text: "OK!",
               onPress: () => {
                 downloadAudiobook(bookID);
-                // initialiseAllRequiredData();
               }
             }
           ]
         )} >
-        <View>
+        <View style={{flex: 1}}>
           <Text style={styles.bookText}>{bookTitle}</Text>
-          <Text style={styles.bookText}>{bookID}</Text>
-        </View>
+          {/* <FontAwesomeIcon 
+          icon={faCloudDownloadAlt} 
+          size={150} 
+          color={COLORS.saffron}
+          style={{position:"absolute", bottom: "15%", right: "10%", opacity: 0.75}} /> */}
+          </View>
+          { !owned ? 
+          <FontAwesomeIcon 
+            icon={faUserFriends} 
+            size={25} 
+            color={'white'}
+            style={{position:"absolute", bottom: 10, right: 10, alignSelf:"flex-end"}} /> : null
+          }
       </TouchableOpacity>
     )
   
     const renderItem = ({ item }) => { 
       if (item.saved) {
-        return <SavedBook bookID={item.bookID} bookTitle={item.bookTitle} />
+        return <SavedBook bookID={item.bookID} bookTitle={item.bookTitle} owned={item.owned}/>
       } else {
-        return <UnsavedBook bookID={item.bookID} bookTitle={item.bookTitle} />
+        return <UnsavedBook bookID={item.bookID} bookTitle={item.bookTitle} owned={item.owned}/>
       }
     }
 
@@ -263,7 +290,7 @@ export default function HomeScreen({ navigation }) {
               style= {{alignItems: "center", paddingTop: SIZES.height/3.8, paddingHorizontal: SIZES.padding2}}>
               <Text 
                 style={[{ textAlign: "center"}, styles.saffronFont]}>
-                No audiobooks yet, go ahead and upload your first audiobook! :) 
+                No audiobooks!
               </Text>
               </View>
             }
