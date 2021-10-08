@@ -16,15 +16,13 @@ import { Dimensions, BackHandler } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronCircleLeft, faPlayCircle, faPauseCircle, faStopCircle, faBookmark } from '@fortawesome/free-solid-svg-icons';
 import Tts from 'react-native-tts';
-import HighlightText from '@sanar/react-native-highlight-text';
 import SlidingUpPanel from 'rn-sliding-up-panel';
 
 import { COLORS, SIZES, FONTS } from '../constants/theme';
-// import { book } from '../testBeeMovie'; // REMOVE AFTER INCORPORATING API
-// import { progress } from '../testBookProgress'; // REMOVE AFTER INCORPORATING API
 import { Bookmarks } from '../components/Bookmarks';
 import { UserContext } from '../App';
 import { addBookmark, removeBookmark, updateAudiobookProgress } from '../components/APICaller';
+import TextReader from '../components/TextReader';
 
 Tts.setDucking(true); // Enable lowering other applications output level while speaking (also referred to as "ducking").
 const sentenceRegex = /[^.?!]+[.!?]+[\])'"`’”]*|.+$/g; // used to split text into sentences
@@ -226,6 +224,11 @@ export default function PlayAudioScreen({ navigation, route }) {
     // overwrite Android's default back behaviour
     if (backHandler !== null) backHandler.remove();
     setBackHandler(BackHandler.addEventListener('hardwareBackPress', exitScreen));
+
+    return function cleanup() { // remove when exiting
+      Tts.removeAllListeners('tts-finish');
+      backHandler.remove();
+    }
   }, [page, isPlaying, bookmarksActive]);
 
   // function to handle play/pause
@@ -333,12 +336,11 @@ export default function PlayAudioScreen({ navigation, route }) {
           <Text style={FONTS.h1}>{route.params.bookTitle}</Text>
         </View>
         <ScrollView style={styles.textReader} ref={scrollRef}>
-          <HighlightText 
+          <TextReader
+            text={page.sentences}
+            currSentence={page.sentenceNum}
             style={styles.textStyle}
             highlightStyle={{ backgroundColor: COLORS.saffron }}
-            searchWords={[page.sentences[page.sentenceNum-1].trim()]}
-            textToHighlight={page.pageText}
-            caseSensitive={true}
           />
         </ScrollView>
         <View style={styles.bottomBar}>
