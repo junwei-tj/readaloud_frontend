@@ -3,7 +3,6 @@ import {
   SafeAreaView,
   StatusBar,
   StyleSheet,
-  Text,
   View,
   useColorScheme,
 } from 'react-native';
@@ -33,23 +32,14 @@ export default function PDFUploadScreen({navigation}) {
 
 const styles = StyleSheet.create({
   container: {
-    // flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.offblack,
   },
   uploadComponent: {
-    top: 100,
-    left: 50,
+    top: 60,
+    left: 20,
     height: '100%',
     width: '100%',
   },
-
-  // input: {
-  //   height: 40,
-  //   margin: 12,
-  //   width: '80%',
-  //   borderWidth: 1,
-  //   padding: 10,
-  // },
 });

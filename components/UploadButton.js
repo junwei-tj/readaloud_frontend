@@ -1,12 +1,11 @@
 import React, {useState, useContext} from 'react';
-import {Button, View, Text, TouchableHighlight, TextInput} from 'react-native';
+import {View, Text, TouchableHighlight, TextInput, Pressable} from 'react-native';
 import {StyleSheet} from 'react-native';
 
 import DocumentPicker from 'react-native-document-picker';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faUserCircle} from '@fortawesome/free-solid-svg-icons';
-import {faFolderOpen} from '@fortawesome/free-solid-svg-icons';
 import {faTrash} from '@fortawesome/free-solid-svg-icons';
+import {faCloudUploadAlt} from '@fortawesome/free-solid-svg-icons';
 
 import {COLORS, FONTS, SIZES} from '../constants/theme';
 import {UserContext} from '../App';
@@ -20,7 +19,7 @@ export default function UploadButton() {
   const uploadFn = async () => {
     if (singleFile != null) {
       if (fileName == '') {
-        alert('Enter Title');
+        alert('Please enter the name to give to the audiobook!');
       } else {
         //console.log(singleFile); singleFile obj = {fileCopyUri, name, size, type, uri}
         console.log('uploading file');
@@ -68,12 +67,12 @@ export default function UploadButton() {
       console.log('File Size : ' + res.size);
       //Setting the state to show single file attributes
       setSingleFile(res);
-      alert(`${res.name} chosen`);
+      alert(`${res.name} has been selected!`);
     } catch (err) {
       //Handling any exception (If any)
       if (DocumentPicker.isCancel(err)) {
         //If user canceled the document selection
-        alert('Canceled from single doc picker');
+        //alert('Canceled from single doc picker');
       } else {
         //For Unknown Error
         alert('Unknown Error: ' + JSON.stringify(err));
@@ -101,31 +100,36 @@ export default function UploadButton() {
     console.log(fileName);
     alert(fileName);
   };
+  
   return (
     <View style={styles.container}>
-      <Text style={{fontWeight: 'bold', paddingTop: 10, ...FONTS.h2}}>
-        {' '}
-        {'Upload PDF\n -Make sure PDF is a clear scan\n -legally obtained'}{' '}
+      <Text style={{fontWeight: 'bold', paddingTop: 10, ...FONTS.h2, textAlign: "center", color: COLORS.offwhite}}>
+        Upload PDF
       </Text>
-      <TouchableHighlight onPress={selectFile}>
+      <Text style={{fontWeight: 'bold', paddingTop: 10, paddingHorizontal: SIZES.padding, ...FONTS.h2, color: COLORS.offwhite}}>
+        Using a PDF with a clear scan will result in more accurate conversion results!
+      </Text>
+
+      <Pressable
+        style= {({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}
+        onPress={selectFile}>
         <View style={styles.selectFile}>
-          <FontAwesomeIcon icon={faFolderOpen} size={100} color={'orange'} />
-          <Text>{'Choose file here...'}</Text>
+          <FontAwesomeIcon icon={faCloudUploadAlt} size={100} color={COLORS.saffron}/>
+          <Text style={{...FONTS.h3,  color: "#ebebeb"}}>Select File!</Text>
         </View>
-      </TouchableHighlight>
+      </Pressable>
 
       <View>
         {singleFile ? (
           <View style={styles.chosenFile}>
-            <Text> {singleFile.name} </Text>
-
+            <Text style={{...FONTS.h3, color: COLORS.offwhite}}> {singleFile.name} </Text>
             <TouchableHighlight
               onPress={() => {
                 setSingleFile(null);
                 setFileName('');
               }}>
               <View style={styles.delete}>
-                <FontAwesomeIcon icon={faTrash} size={20} color={'black'} />
+                <FontAwesomeIcon icon={faTrash} size={20} color={COLORS.offwhite} />
               </View>
             </TouchableHighlight>
           </View>
@@ -134,21 +138,32 @@ export default function UploadButton() {
         )}
       </View>
 
-      <View style={styles.uploadBtn}>
+      <View style={styles.bottomHalf}>
         {singleFile ? (
           <View>
             <TextInput
               style={styles.input}
-              placeholder="Enter Title "
+              placeholder="Enter Name of Audiobook"
               onChangeText={setFileName}
               value={fileName}
             />
-            <Button title="Upload PDF" onPress={uploadFn} />
-          </View>
+            <Pressable
+              style= {({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}
+              onPress={uploadFn}>
+              <View style={styles.uploadButton}>
+                <Text style={{...FONTS.h2,  color: "#ebebeb"}}>Upload PDF</Text>
+              </View>
+            </Pressable>
+          </View>   
         ) : (
           <View>
-            <Button title="Upload PDF" onPress={uploadFn} />
-            <Button title="testAPI" onPress={() => Log(fileName)} />
+            <Pressable
+              style= {({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}
+              onPress={uploadFn}>
+              <View style={styles.uploadButton}>
+                <Text style={{...FONTS.h2,  color: "#ebebeb"}}>Upload PDF</Text>
+              </View>
+            </Pressable>
           </View>
         )}
       </View>
@@ -158,9 +173,9 @@ export default function UploadButton() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.grey, // change to white, den on main PDFuploadscreen , set background to grey
-    width: 300,
-    height: 500,
+    backgroundColor: COLORS.grey,
+    width: SIZES.width/1.1,
+    height: SIZES.height/1.3,
     alignItems: 'center',
     borderRadius: 10,
   },
@@ -174,13 +189,13 @@ const styles = StyleSheet.create({
     borderStyle: 'dotted',
     borderRadius: 5,
     alignItems: 'center',
-    backgroundColor: '#d6eeff',
+    backgroundColor: COLORS.grey,
   },
   input: {
     height: 40,
+    minWidth: SIZES.width/1.5,
     borderWidth: 3,
     paddingLeft: SIZES.padding,
-    marginHorizontal: 15,
     borderColor: COLORS.saffron,
     borderRadius: 20,
     backgroundColor: COLORS.white,
@@ -190,7 +205,16 @@ const styles = StyleSheet.create({
     top: 30,
     justifyContent: 'space-between',
   },
-  uploadBtn: {
+  bottomHalf: {
     top: 100,
   },
+  uploadButton: {
+    top: 20,
+    width: 250,
+    marginLeft: 5,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: COLORS.saffron,
+  }
 });

@@ -22,7 +22,7 @@ import { COLORS, FONTS, SIZES } from '../constants/theme';
 
 export default function HomeScreen({ navigation }) {
 
-  const { userInfo } = useContext(UserContext);
+  const { userInfo, notifications } = useContext(UserContext);
   const [refresh, setRefresh] = useState(true);
 
   const [retreivedBooks, setRetreivedBooks] = useState(); //All audiobook details
@@ -38,16 +38,16 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     initialiseAllRequiredData();
     console.log(userInfo);
+    console.log(notifications);
     //clearAllLocalStorage();
   }, [userInfo]);
 
   useFocusEffect( //Reload flatlist data on screen focus
     React.useCallback(() => {
       initialiseAllRequiredData();
-    }, [])
+    }, [userInfo])
   );
 
-  
   async function initialiseAllRequiredData() {
     await loadAudiobookList();
   }
