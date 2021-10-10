@@ -11,10 +11,11 @@ import {
   Modal,
   TextInput
 } from 'react-native';
-import { Dimensions, BackHandler } from 'react-native';
+import { Dimensions, BackHandler, Platform } from 'react-native';
+
 import { StackActions } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faChevronCircleLeft, faPlayCircle, faPauseCircle, faStopCircle, faBookmark, faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faChevronCircleLeft, faPlayCircle, faPauseCircle, faStopCircle, faBookmark, faArrowLeft, faArrowRight, faCog } from '@fortawesome/free-solid-svg-icons';
 import Tts from 'react-native-tts';
 import SlidingUpPanel from 'rn-sliding-up-panel';
 
@@ -23,8 +24,10 @@ import { Bookmarks } from '../components/Bookmarks';
 import { UserContext } from '../App';
 import { addBookmark, removeBookmark, updateAudiobookProgress } from '../components/APICaller';
 import TextReader from '../components/TextReader';
+import PlayOptionsModal from '../components/PlayOptionsModal';
 
 Tts.setDucking(true); // Enable lowering other applications output level while speaking (also referred to as "ducking").
+
 const sentenceRegex = /[^.?!]+[.!?]+[\])'"`’”]*|.+$/g; // used to split text into sentences
 const windowHeight = Dimensions.get('window').height;
 
@@ -41,7 +44,11 @@ export default function PlayAudioScreen({ navigation, route }) {
     pageNum: route.params.lastProgress.currentPage, // pageNum starts from 1
   });  
   const [chosenPage, setChosenPage] = useState(0); // for tracking page number input
-  const [backHandler, setBackHandler] = useState(null); // tracks last backhandler's event listener, if not we cannot remove the correct one
+  const [ttsOptions, setTtsOptions] = useState({
+    voice: Platform.OS === 'ios' ? "com.apple.ttsbundle.Samantha-compact" : "en-US-language",
+    rate: 0.5,
+    pitch: 1.0,
+  }); 
 
   // ========== States that act as flags ==========
   const [isPlaying, setIsPlaying] = useState(false);  
@@ -50,6 +57,7 @@ export default function PlayAudioScreen({ navigation, route }) {
   const [pageInputError, setPageInputError] = useState(false); // for showing user page number is invalid
   const [refresh, setRefresh] = useState(false); // for refreshing bookmark list when bookmarks is updated
   const [bookmarksActive, setBookmarksActive] = useState(false); // tracks if bookmarks is opened
+  const [showOptionsModal, setShowOptionsModal] = useState(false); // for showing options modal
 
   const { userInfo } = useContext(UserContext);
   const userID = userInfo.user.id; 
@@ -113,7 +121,7 @@ export default function PlayAudioScreen({ navigation, route }) {
     let backHandler = BackHandler.addEventListener('hardwareBackPress', exitScreen);
 
     return function cleanup() { // remove old listeners whenever the dependencies update
-      ttsHandler.remove();
+      if (ttsHandler !== null) ttsHandler.remove();
       if (backHandler !== null) backHandler.remove();
     }
   }, [page, isPlaying, bookmarksActive]);
@@ -209,6 +217,13 @@ export default function PlayAudioScreen({ navigation, route }) {
       setPageInputError(false);
     }
   }
+
+  // change TTS options 
+  useEffect(() => {
+    Tts.setDefaultVoice(ttsOptions.voice);
+    Tts.setDefaultRate(ttsOptions.rate);
+    Tts.setDefaultPitch(ttsOptions.pitch);
+  }, [ttsOptions]);
   
   return (
     <SafeAreaView>
@@ -222,6 +237,11 @@ export default function PlayAudioScreen({ navigation, route }) {
             </Pressable>
           </View>
           <Text style={styles.bookTitle} numberOfLines={1}>{route.params.bookTitle}</Text>
+          <View style={styles.settingsIcon}>
+            <Pressable onPress={() => setShowOptionsModal(true)} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
+              <FontAwesomeIcon icon={faCog} size={36} color={COLORS.offblack}/>
+            </Pressable>
+          </View>
         </View>
 
         {/* Text Reader (Middle Component) */}
@@ -313,6 +333,15 @@ export default function PlayAudioScreen({ navigation, route }) {
         </View>
       </Modal>
 
+      {/* Options Modal */}
+      {showOptionsModal && <View style={styles.savingOverlay}></View>}
+      <PlayOptionsModal
+        options={ttsOptions}
+        setOptions={setTtsOptions}
+        show={showOptionsModal}
+        setShow={setShowOptionsModal}
+      />
+
       {/* Saving Progress Overlay */}
       {saving && 
         <View style={styles.savingOverlay}>
@@ -330,7 +359,7 @@ const styles = StyleSheet.create({
   },
   // top bar
   topBar: {
-    height: '10%',
+    height: '8%',
     width: '100%',
     paddingHorizontal: 24,
     justifyContent: 'space-between',
@@ -339,11 +368,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.saffron,
   },
   backIcon: {
-    borderRadius: 16,
     marginRight: 16,
   },
+  settingsIcon: {
+    marginLeft: 16,
+  },
   bookTitle: {
-    ...FONTS.h1, 
+    ...FONTS.h2, 
     flex: 1,
   },
   // text reader
@@ -351,7 +382,8 @@ const styles = StyleSheet.create({
     height: '70%',
   },
   textStyle: {
-    ...FONTS.body1,
+    ...FONTS.body2,
+    lineHeight: 36,
     fontSize: 24,
     paddingVertical: 16,
     paddingHorizontal: 24,
