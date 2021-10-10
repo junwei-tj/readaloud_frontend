@@ -14,7 +14,7 @@ import {
 import { Dimensions, BackHandler } from 'react-native';
 import { StackActions } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faChevronCircleLeft, faPlayCircle, faPauseCircle, faStopCircle, faBookmark } from '@fortawesome/free-solid-svg-icons';
+import { faChevronCircleLeft, faPlayCircle, faPauseCircle, faStopCircle, faBookmark, faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import Tts from 'react-native-tts';
 import SlidingUpPanel from 'rn-sliding-up-panel';
 
@@ -27,117 +27,6 @@ import TextReader from '../components/TextReader';
 Tts.setDucking(true); // Enable lowering other applications output level while speaking (also referred to as "ducking").
 const sentenceRegex = /[^.?!]+[.!?]+[\])'"`’”]*|.+$/g; // used to split text into sentences
 const windowHeight = Dimensions.get('window').height;
-
-const styles = StyleSheet.create({
-  container: {
-    height: '100%',
-    backgroundColor: COLORS.offblack,
-  },
-  // top bar
-  topBar: {
-    height: '10%',
-    width: '100%',
-    paddingHorizontal: 24,
-    justifyContent: 'space-between',
-    flexDirection: 'row',
-    alignItems: 'center',        
-    backgroundColor: COLORS.saffron,
-  },
-  backIcon: {
-    borderRadius: 16,
-    marginRight: 16,
-  },
-  // text reader
-  textReader: {
-    height: '70%',
-  },
-  textStyle: {
-    ...FONTS.body1,
-    fontSize: 24,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    color: COLORS.white,
-  },
-  // bottom bar
-  bottomBar: {
-    height: '20%',
-    alignItems: 'center',
-    backgroundColor: COLORS.saffron,
-    paddingVertical: 8,
-  },
-  // pageText: {
-  //   fontSize: 24,
-  //   marginTop: 8,
-  // },
-  pageNumButton: {
-    backgroundColor: COLORS.offblack,
-    width: 128,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
-    marginVertical: 8,
-  },
-  pageNumText: {
-    ...FONTS.h2,
-    color: COLORS.white,
-  },
-  slider: {
-    width: '90%', 
-    height: 40,
-  },
-  controlBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    width: '80%',
-    marginTop: 16,
-  },
-  controlIcons: {
-    borderRadius: 24,
-    paddingHorizontal: 16,
-  },
-  // saving overlay
-  savingOverlay: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.offblack,
-    opacity: 0.75,
-    position: 'absolute',
-  },
-  savingText: {
-    ...FONTS.h2,
-    color: COLORS.white,
-  },
-  // choose page modal
-  modalContainer: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pageModal: {
-    width: 256,
-    height: 128,
-    backgroundColor: COLORS.saffron,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pageInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  pageSelectionText: {
-    ...FONTS.h2,
-    color: COLORS.offblack,
-  },
-  inputError: {
-    borderColor: 'crimson',
-    borderWidth: 1,
-  },
-});
 
 export default function PlayAudioScreen({ navigation, route }) { 
   const bookID = route.params.bookID;
@@ -217,20 +106,15 @@ export default function PlayAudioScreen({ navigation, route }) {
     }
   }
 
-  // need to re-add listener because eventlistener depends on current state, so cannot pass empty dependency 
-  // so this useeffect will run multiple times, but we technically only want the eventlistener to only be added once, hence the removal + add back
+  // add listeners
   useEffect(() => { 
-    Tts.removeAllListeners('tts-finish');
-    Tts.addEventListener('tts-finish', advance);
+    let ttsHandler = Tts.addEventListener('tts-finish', advance);
     // overwrite Android's default back behaviour
-    if (backHandler !== null) backHandler.remove();
-    setBackHandler(BackHandler.addEventListener('hardwareBackPress', exitScreen));
+    let backHandler = BackHandler.addEventListener('hardwareBackPress', exitScreen);
 
-    return function cleanup() { // remove when exiting
-      Tts.removeAllListeners('tts-finish');
-      if (backHandler !== null){
-        backHandler.remove();
-      }
+    return function cleanup() { // remove old listeners whenever the dependencies update
+      ttsHandler.remove();
+      if (backHandler !== null) backHandler.remove();
     }
   }, [page, isPlaying, bookmarksActive]);
 
@@ -300,8 +184,8 @@ export default function PlayAudioScreen({ navigation, route }) {
   }
 
   // function to go to user's chosen page
-  const goToChosenPage = () => {
-    let chosen = Number.parseInt(chosenPage);
+  const goToChosenPage = (pageToGo) => {
+    let chosen = Number.parseInt(pageToGo);
     if (chosen < 1 || chosen > bookPages.length) {
       setPageInputError(true);
     } else {
@@ -330,14 +214,17 @@ export default function PlayAudioScreen({ navigation, route }) {
     <SafeAreaView>
       <StatusBar barStyle='dark-content' />
       <View style={styles.container}>
+        {/* Top Bar */}
         <View style={styles.topBar}>
           <View style={styles.backIcon}>
             <Pressable onPress={exitScreen} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
               <FontAwesomeIcon icon={faChevronCircleLeft} size={36} color={COLORS.offblack}/>
             </Pressable>
           </View>
-          <Text style={FONTS.h1}>{route.params.bookTitle}</Text>
+          <Text style={styles.bookTitle} numberOfLines={1}>{route.params.bookTitle}</Text>
         </View>
+
+        {/* Text Reader (Middle Component) */}
         <ScrollView style={styles.textReader} ref={scrollRef}>
           <TextReader
             text={page.sentences}
@@ -346,10 +233,24 @@ export default function PlayAudioScreen({ navigation, route }) {
             highlightStyle={{ backgroundColor: COLORS.saffron }}
           />
         </ScrollView>
+
+        {/* Bottom Bar */}
         <View style={styles.bottomBar}>
-          <Pressable onPress={() => setShowPageModal(true)} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.pageNumButton]}>
-            <Text style={styles.pageNumText}>Pg {page.pageNum}</Text>        
-          </Pressable>
+          <View style={styles.pageBar}>
+            <View style={styles.controlIcons}>   
+              <Pressable onPress={() => goToChosenPage(page.pageNum-1)} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
+                <FontAwesomeIcon icon={faArrowLeft} size={42} color={'black'}/>
+              </Pressable>
+            </View> 
+            <Pressable onPress={() => setShowPageModal(true)} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.pageNumButton]}>
+              <Text style={styles.pageNumText}>Pg {page.pageNum}</Text>        
+            </Pressable>
+            <View style={styles.controlIcons}>   
+              <Pressable onPress={() => goToChosenPage(page.pageNum+1)} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
+                <FontAwesomeIcon icon={faArrowRight} size={42} color={'black'}/>
+              </Pressable>
+            </View> 
+          </View>
           <View style={styles.controlBar}>   
             <View style={styles.controlIcons}>   
               <Pressable onPress={onPlayPressed} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
@@ -384,6 +285,7 @@ export default function PlayAudioScreen({ navigation, route }) {
           />
         </SlidingUpPanel>
       </View>
+
       {/* Select Page Number Modal */}
       {showPageModal && <View style={styles.savingOverlay}></View>}
       <Modal
@@ -404,12 +306,13 @@ export default function PlayAudioScreen({ navigation, route }) {
               />
               <Text style={styles.pageSelectionText}>{`/ ${bookPages.length}`}</Text>
             </View>
-            <Pressable onPress={goToChosenPage} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.pageNumButton]}>
+            <Pressable onPress={() => goToChosenPage(chosenPage)} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.pageNumButton]}>
               <Text style={styles.pageNumText}>Go To Page</Text>        
             </Pressable>
           </View>
         </View>
       </Modal>
+
       {/* Saving Progress Overlay */}
       {saving && 
         <View style={styles.savingOverlay}>
@@ -420,3 +323,119 @@ export default function PlayAudioScreen({ navigation, route }) {
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    height: '100%',
+    backgroundColor: COLORS.offblack,
+  },
+  // top bar
+  topBar: {
+    height: '10%',
+    width: '100%',
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    alignItems: 'center',        
+    backgroundColor: COLORS.saffron,
+  },
+  backIcon: {
+    borderRadius: 16,
+    marginRight: 16,
+  },
+  bookTitle: {
+    ...FONTS.h1, 
+    flex: 1,
+  },
+  // text reader
+  textReader: {
+    height: '70%',
+  },
+  textStyle: {
+    ...FONTS.body1,
+    fontSize: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    color: COLORS.white,
+  },
+  // bottom bar
+  bottomBar: {
+    height: '20%',
+    alignItems: 'center',
+    backgroundColor: COLORS.saffron,
+    paddingVertical: 8,
+  },
+  pageBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  pageNumButton: {
+    backgroundColor: COLORS.offblack,
+    width: 128,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    marginVertical: 8,
+    marginHorizontal: 8,
+  },
+  pageNumText: {
+    ...FONTS.h2,
+    color: COLORS.white,
+  },
+  slider: {
+    width: '90%', 
+    height: 40,
+  },
+  controlBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    width: '80%',
+    marginTop: 16,
+  },
+  controlIcons: {
+    borderRadius: 16,
+    paddingHorizontal: 16,
+  },
+  // saving overlay
+  savingOverlay: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.offblack,
+    opacity: 0.75,
+    position: 'absolute',
+  },
+  savingText: {
+    ...FONTS.h2,
+    color: COLORS.white,
+  },
+  // choose page modal
+  modalContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pageModal: {
+    width: 256,
+    height: 128,
+    backgroundColor: COLORS.saffron,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pageInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  pageSelectionText: {
+    ...FONTS.h2,
+    color: COLORS.offblack,
+  },
+  inputError: {
+    borderColor: 'crimson',
+    borderWidth: 1,
+  },
+});
