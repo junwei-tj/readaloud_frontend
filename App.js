@@ -130,7 +130,10 @@ export default function App() {
             <Tab.Screen
               name="Settings"
               component={SettingsScreen}
-              options={{headerShown: false}}
+              options={{
+                headerShown: false,
+                tabBarBadge: (notifications?.notifications?.length) ? notifications.notifications.length : null
+                }}
             />
           </Tab.Navigator>
         )}

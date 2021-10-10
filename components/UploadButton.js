@@ -1,5 +1,5 @@
 import React, {useState, useContext} from 'react';
-import {View, Text, TouchableHighlight, TextInput, Pressable} from 'react-native';
+import {View, Text, TextInput, Pressable, ActivityIndicator} from 'react-native';
 import {StyleSheet} from 'react-native';
 
 import DocumentPicker from 'react-native-document-picker';
@@ -9,12 +9,14 @@ import {faCloudUploadAlt} from '@fortawesome/free-solid-svg-icons';
 
 import {COLORS, FONTS, SIZES} from '../constants/theme';
 import {UserContext} from '../App';
-import {uploadPDF, getAudiobookTitles} from './APICaller';
+import {uploadPDF} from './APICaller';
 
 export default function UploadButton() {
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
   const [singleFile, setSingleFile] = useState(null);
   const [fileName, setFileName] = useState('');
+  const [allowButtonClick, setAllowButtonClick] = useState(true);
+  const [uploading, setUploading] = useState(false);
 
   const uploadFn = async () => {
     if (singleFile != null) {
@@ -23,7 +25,8 @@ export default function UploadButton() {
       } else {
         //console.log(singleFile); singleFile obj = {fileCopyUri, name, size, type, uri}
         console.log('uploading file');
-
+        setAllowButtonClick(false);
+        setUploading(true);
         // FormData object
         // data.append(k,v)       // key for server to process
         // fetch(url, [options] )
@@ -38,6 +41,8 @@ export default function UploadButton() {
             alert('file uploaded');
             setSingleFile(null);
             setFileName('');
+            setAllowButtonClick(true);
+            setUploading(false);
           })
           .catch(e => alert('did not upload file successfully', e));
       }
@@ -48,6 +53,7 @@ export default function UploadButton() {
 
   const selectFile = async () => {
     //Opening Document Picker for selection of one file
+    setAllowButtonClick(false);
     try {
       const res = await DocumentPicker.pickSingle({
         type: [DocumentPicker.types.pdf],
@@ -68,6 +74,7 @@ export default function UploadButton() {
       //Setting the state to show single file attributes
       setSingleFile(res);
       alert(`${res.name} has been selected!`);
+      setAllowButtonClick(true);
     } catch (err) {
       //Handling any exception (If any)
       if (DocumentPicker.isCancel(err)) {
@@ -78,6 +85,7 @@ export default function UploadButton() {
         alert('Unknown Error: ' + JSON.stringify(err));
         throw err;
       }
+      setAllowButtonClick(true);
     }
   };
 
@@ -112,26 +120,33 @@ export default function UploadButton() {
 
       <Pressable
         style= {({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}
-        onPress={selectFile}>
+        onPress={selectFile}
+        disabled = {!allowButtonClick}>
         <View style={styles.selectFile}>
           <FontAwesomeIcon icon={faCloudUploadAlt} size={100} color={COLORS.saffron}/>
           <Text style={{...FONTS.h3,  color: "#ebebeb"}}>Select File!</Text>
         </View>
       </Pressable>
 
-      <View>
+      <View style={styles.textContainer}>
         {singleFile ? (
           <View style={styles.chosenFile}>
-            <Text style={{...FONTS.h3, color: COLORS.offwhite}}> {singleFile.name} </Text>
-            <TouchableHighlight
+            <Text 
+            style={{...FONTS.h3, 
+            color: COLORS.offwhite,
+            paddingRight: 10,
+            maxHeight: SIZES.height/12}}> {singleFile.name} </Text>
+            <Pressable
+              style= {({ pressed }) => [{ opacity: pressed ? 0.2 : 1, alignSelf: "center"}]}
               onPress={() => {
-                setSingleFile(null);
-                setFileName('');
-              }}>
-              <View style={styles.delete}>
+              setSingleFile(null);
+              setFileName('');
+            }}
+            disabled = {!allowButtonClick}>
+              <View>
                 <FontAwesomeIcon icon={faTrash} size={20} color={COLORS.offwhite} />
               </View>
-            </TouchableHighlight>
+            </Pressable>
           </View>
         ) : (
           <Text> {''} </Text>
@@ -151,7 +166,13 @@ export default function UploadButton() {
               style= {({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}
               onPress={uploadFn}>
               <View style={styles.uploadButton}>
-                <Text style={{...FONTS.h2,  color: "#ebebeb"}}>Upload PDF</Text>
+              { uploading ? 
+                <ActivityIndicator
+                  size = "small"
+                  color = {COLORS.white}
+                /> : <Text style={{...FONTS.h2,  color: "#ebebeb"}}>Upload PDF</Text>
+              }
+                
               </View>
             </Pressable>
           </View>   
@@ -178,6 +199,9 @@ const styles = StyleSheet.create({
     height: SIZES.height/1.3,
     alignItems: 'center',
     borderRadius: 10,
+  },
+  textContainer: {
+    width: SIZES.width/1.4,
   },
   selectFile: {
     top: 20,
