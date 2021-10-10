@@ -383,8 +383,8 @@ const styles = StyleSheet.create({
   },
   textStyle: {
     ...FONTS.body2,
-    lineHeight: 36,
-    fontSize: 24,
+    lineHeight: 32,
+    fontSize: 20,
     paddingVertical: 16,
     paddingHorizontal: 24,
     color: COLORS.white,

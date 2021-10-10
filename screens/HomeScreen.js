@@ -30,7 +30,7 @@ import { COLORS, FONTS, SIZES } from '../constants/theme';
 
 export default function HomeScreen({ navigation }) {
 
-  const { userInfo, notifications } = useContext(UserContext);
+  const { userInfo } = useContext(UserContext);
   const [refresh, setRefresh] = useState(true);
 
   const [savedAudiobooks, setSavedAudiobooks] = useState([]); //Saved audiobook details (including text)
@@ -96,21 +96,15 @@ export default function HomeScreen({ navigation }) {
   async function loadAudiobookList(){
     try {
       // ===== Retrieval of audiobooks under user from the server =====
-      let titlesJSON = await getAudiobookTitles(userInfo.user.id, 0); //Can replace with actual user or 110771401644785347942
+      let titlesJSON = await getAudiobookTitles(userInfo.user.id); //Can replace with actual user or 110771401644785347942
       let tempRetrievedArray = [];
-      titlesJSON.forEach((item) => {
-        tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.book_title, owned: true});
+      titlesJSON["OwnedBooks"].forEach((item) => {
+        tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.title, owned: true});
       })
- 
-      // let titlesJSONOwned = await getAudiobookTitles(userInfo.user.id, 1); //Can replace with actual user or 110771401644785347942
-      // let tempRetrievedArray = [];
-      // titlesJSONOwned.forEach((item) => {
-      //   tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.book_title, owned: true});
-      // })
-      // let titlesJSONShared = await getAudiobookTitles(userInfo.user.id, 2); //Can replace with actual user or 110771401644785347942
-      // titlesJSONShared.forEach((item) => {
-      //   tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.book_title, owned: false});
-      // })
+
+      titlesJSON["SharedBooks"].forEach((item) => {
+        tempRetrievedArray.push({bookID: item.book_id, bookTitle: item.title, owned: false});
+      })
 
       // ===== Retrieval of titles of saved audiobooks =====
       let jsonValue = [];
@@ -148,8 +142,10 @@ export default function HomeScreen({ navigation }) {
     try {
       const jsonValue = JSON.stringify(audiobookText);
       await AsyncStorage.setItem(bookID, jsonValue); //to replace with bookID
-      setModalText("Audiobook has been downloaded!")
       initialiseAllRequiredData();
+      setTimeout(function() {
+        setModalText("Audiobook has been downloaded!");
+      }, 1200);
     } catch (e) {
       alert('Saving of audiobook failed, please try again!');
     }
@@ -226,7 +222,7 @@ export default function HomeScreen({ navigation }) {
     const SavedBook = ({ bookID, bookTitle, owned }) => (
       <TouchableOpacity style={styles.savedBook}
         onPress = {() => selectBook(bookID, bookTitle)} >
-        <View>
+        <View style={{alignItems:"center"}}>
           <Text style={styles.bookText}>{bookTitle}</Text>
         </View>
         { !owned ? 
@@ -258,7 +254,7 @@ export default function HomeScreen({ navigation }) {
             }
           ]
         )} >
-        <View style={{flex: 1}}>
+        <View style={{flex: 1, alignItems:"center"}}>
           <Text style={styles.bookText}>{bookTitle}</Text> 
         </View>
         <FontAwesomeIcon 
@@ -342,12 +338,17 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <Text style={styles.modalText}>{modalText}</Text>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setModalVisible(!modalVisible)}
-            >
-              <Text style={styles.textStyle}>Yay!</Text>
-            </Pressable>
+            {
+              modalText !== "Downloading audiobook text..." ? 
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => {
+                  setModalVisible(!modalVisible);
+                  setModalText("Downloading audiobook text...")
+                }}>
+                <Text style={styles.textStyle}>Yay!</Text>
+              </Pressable> : null
+            }
           </View>
         </View>
       </Modal>
@@ -421,6 +422,7 @@ const styles= StyleSheet.create({
     ...FONTS.body2, 
     color: COLORS.white,
     padding: 10,
+    height:SIZES.height / 4.2,
   },
   whiteFont:{
     ...FONTS.h2, 
@@ -439,7 +441,6 @@ const styles= StyleSheet.create({
   modalView: {
     margin: 20,
     backgroundColor: "white",
-    borderRadius: 20,
     padding: 35,
     alignItems: "center",
     shadowColor: "#000",

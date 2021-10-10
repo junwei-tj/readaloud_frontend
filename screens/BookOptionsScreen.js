@@ -225,12 +225,9 @@ export default function BookOptionsScreen({route, navigation}) {
         {
           text: "Delete from Server",
           onPress: async() => {
-            let response = await deleteAudiobookFile(bookID);
-            console.log(response);
-            if (response){ //Delete successful
-
+            let response = await deleteAudiobookFile(bookID, userInfo.user.id);
+            if (response === 204){ //Delete successful
               await AsyncStorage.removeItem(bookID);
-
               Alert.alert(
                 bookTitle,
                 "Deleting of audiobook from server was successful!",
@@ -502,7 +499,6 @@ const styles = StyleSheet.create({
   modalView: {
     margin: 20,
     backgroundColor: "white",
-    borderRadius: 20,
     padding: 35,
     alignItems: "center",
     shadowColor: "#000",

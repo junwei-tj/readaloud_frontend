@@ -1,5 +1,5 @@
 import React, {useState, useContext} from 'react';
-import {View, Text, TextInput, Pressable, ActivityIndicator} from 'react-native';
+import {View, Text, TextInput, Pressable, ActivityIndicator, Modal} from 'react-native';
 import {StyleSheet} from 'react-native';
 
 import DocumentPicker from 'react-native-document-picker';
@@ -17,11 +17,14 @@ export default function UploadButton() {
   const [fileName, setFileName] = useState('');
   const [allowButtonClick, setAllowButtonClick] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalText, setModalText] = useState("");
 
   const uploadFn = async () => {
     if (singleFile != null) {
       if (fileName == '') {
-        alert('Please enter the name to give to the audiobook!');
+        setModalText("Please enter the desired name for the audiobook!")
+        setModalVisible(true);
       } else {
         //console.log(singleFile); singleFile obj = {fileCopyUri, name, size, type, uri}
         console.log('uploading file');
@@ -38,7 +41,8 @@ export default function UploadButton() {
 
         uploadPDF(data)
           .then(() => {
-            alert('file uploaded');
+            setModalText("File has been uploaded to server successfully!")
+            setModalVisible(true);
             setSingleFile(null);
             setFileName('');
             setAllowButtonClick(true);
@@ -47,7 +51,8 @@ export default function UploadButton() {
           .catch(e => alert('did not upload file successfully', e));
       }
     } else {
-      alert('Please select a File');
+      setModalText("Please select a file first before uploading!")
+      setModalVisible(true);
     }
   };
 
@@ -73,7 +78,8 @@ export default function UploadButton() {
       console.log('File Size : ' + res.size);
       //Setting the state to show single file attributes
       setSingleFile(res);
-      alert(`${res.name} has been selected!`);
+      setModalText(`${res.name} has been selected!`)
+      setModalVisible(true);
       setAllowButtonClick(true);
     } catch (err) {
       //Handling any exception (If any)
@@ -108,6 +114,29 @@ export default function UploadButton() {
     console.log(fileName);
     alert(fileName);
   };
+
+  function renderModal(){
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {}}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>{modalText}</Text>
+            <Pressable
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => setModalVisible(!modalVisible)}
+            >
+              <Text style={styles.textStyle}>Okay</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
   
   return (
     <View style={styles.container}>
@@ -188,6 +217,7 @@ export default function UploadButton() {
           </View>
         )}
       </View>
+      {renderModal()}
     </View>
   );
 }
@@ -240,5 +270,42 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     backgroundColor: COLORS.saffron,
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2
+  },
+  buttonClose: {
+    backgroundColor: "#2196F3",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center"
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center"
   }
 });

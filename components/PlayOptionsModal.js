@@ -61,6 +61,7 @@ export default function PlayOptionsModal({ options, setOptions, show, setShow })
           <DropDownPicker
             containerStyle={styles.dropdown}
             closeAfterSelecting={true}
+            dropDownDirection="TOP"
             open={openPitches}
             setOpen={setOpenPitches}
             value={pitch}
@@ -87,16 +88,17 @@ const styles = StyleSheet.create({
   },
   pageModal: {
     width: '75%',
-    height: '90%',
+    height: '75%',
     borderRadius: 16,
-    borderColor: COLORS.offblack,
+    borderColor: COLORS.saffron,
     borderWidth: 2,
-    backgroundColor: COLORS.saffron,
+    backgroundColor: COLORS.white,
     padding: 16,
     zIndex: 10,
   },
   modalTitle: {
-    ...FONTS.h1,
+    ...FONTS.h2,
+    color: COLORS.offblack,
     textAlign: 'center',
     marginBottom: 16,
   },

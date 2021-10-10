@@ -29,21 +29,9 @@ export const uploadPDF = async PDFobject => {
 
 //========== APIS for Audiobooks ==========//
 
-export const getAudiobookTitles = async (userID, option) => {
+export const getAudiobookTitles = async (userID) => {
   try {
-    let extraParam;
-    switch (option) {
-      case 1:
-        extraParam = "&type=owned";
-        break;
-      case 2:
-        extraParam = "&type=shared";
-        break;
-      default:
-        extraParam="";
-        break;
-    }
-    const {data} = await axios.get(url + 'audiobooks/titles/?userid=' + userID + extraParam);
+    const {data} = await axios.get(url + 'audiobooks/titles/?userid=' + userID);
     return data;
   } catch (error) {
     console.log(error.message);
@@ -82,10 +70,10 @@ export const updateAudiobookProgress = async (bookID, userID, currentPage, curre
   }
 };
 
-export const deleteAudiobookFile = async bookID => {
+export const deleteAudiobookFile = async (bookID, userID) => {
   try {
-    const {data} = await axios.delete(url + 'audiobooks/' + bookID);
-    return data;
+    const {status} = await axios.delete(url + 'audiobooks/' + bookID + "?user_id=" + userID);
+    return status;
   } catch (error) {
     console.log(error.message);
   }
