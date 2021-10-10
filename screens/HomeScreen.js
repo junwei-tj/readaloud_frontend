@@ -13,10 +13,13 @@ import {
   ActivityIndicator,
   FlatList,
   TouchableOpacity,
+  Easing,
+  Animated,
 } from 'react-native';
 import {
   faCloudDownloadAlt,
   faUserFriends,
+  faSyncAlt,
 } from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import { useFocusEffect } from '@react-navigation/native'
@@ -38,6 +41,24 @@ export default function HomeScreen({ navigation }) {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalText, setModalText] = useState("Downloading audiobook text...");
+
+  //=====Animation Settings for spinning of refresh button=====
+  const spinValue = new Animated.Value(0);
+  const onPressIn = () => Animated.timing( //Called when button is pressed
+      spinValue,
+    {
+      toValue: 1,
+      duration: 1500,
+      easing: Easing.linear,
+      useNativeDriver: true  // To make use of native driver for performance
+    }
+  ).start()
+
+  // Next, interpolate beginning and end values (in this case 0 and 1)
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '720deg']
+  })
 
   useEffect(() => {
     initialiseAllRequiredData();
@@ -197,7 +218,6 @@ export default function HomeScreen({ navigation }) {
           onChangeText={(text) => searchFilter(text)}
         />
       </>
-      
     )
   }
 
@@ -239,20 +259,20 @@ export default function HomeScreen({ navigation }) {
           ]
         )} >
         <View style={{flex: 1}}>
-          <Text style={styles.bookText}>{bookTitle}</Text>
-          {/* <FontAwesomeIcon 
+          <Text style={styles.bookText}>{bookTitle}</Text> 
+        </View>
+        <FontAwesomeIcon 
           icon={faCloudDownloadAlt} 
-          size={150} 
-          color={COLORS.saffron}
-          style={{position:"absolute", bottom: "15%", right: "10%", opacity: 0.75}} /> */}
-          </View>
-          { !owned ? 
-          <FontAwesomeIcon 
-            icon={faUserFriends} 
-            size={25} 
-            color={'white'}
-            style={{position:"absolute", bottom: 10, right: 10, alignSelf:"flex-end"}} /> : null
-          }
+          size={25} 
+          color={'white'}
+          style={{position:"absolute", bottom: 10, left: 10}} />
+        { !owned ? 
+        <FontAwesomeIcon 
+          icon={faUserFriends} 
+          size={25} 
+          color={'white'}
+          style={{position:"absolute", bottom: 10, right: 10, alignSelf:"flex-end"}} /> : null
+        }
       </TouchableOpacity>
     )
   
@@ -267,11 +287,23 @@ export default function HomeScreen({ navigation }) {
     return (
       <View style={{ flex: 1 }}>
           <View style={styles.body}>
-              <Text style={styles.whiteFont}>My Books</Text>
+            <Text style={styles.whiteFont}>My Books</Text>
+            <View style={{alignItems:"center", justifyContent: "center"}}>
+              <Pressable onPress={async() => {
+                  onPressIn();
+                  initialiseAllRequiredData();
+                }}>
+                <Animated.View style={{transform: [{rotate: spin}] }}> 
+                  <FontAwesomeIcon 
+                    icon={faSyncAlt} 
+                    size={20}
+                    color={'white'} />
+                  </Animated.View>
+              </Pressable>
+            </View>
           </View>
 
           <View style={styles.booklist}>
-          {console.log("rerendering")}
             { !filteredBooks ? 
               <ActivityIndicator
                 size = "large"
@@ -386,7 +418,7 @@ const styles= StyleSheet.create({
     height: SIZES.height / 3.5,
   },
   bookText: {
-    ...FONTS.h2, 
+    ...FONTS.body2, 
     color: COLORS.white,
     padding: 10,
   },
