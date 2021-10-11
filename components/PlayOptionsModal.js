@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Modal, Text, Platform } from 'react-native';
+import { StyleSheet, View, Modal, Text, Platform, Pressable } from 'react-native';
 
 import DropDownPicker from 'react-native-dropdown-picker';
 
@@ -73,6 +73,12 @@ export default function PlayOptionsModal({ options, setOptions, show, setShow })
             }))}
             zIndex={1}
           />
+          <Pressable
+            onPress={() => setShow(false)}
+            style={({ pressed }) => [styles.closeButton, { opacity: pressed ? 0.2 : 1}]}
+          >
+            <Text style={styles.closeText}>Back</Text>
+          </Pressable>
         </View>
       </View>
     </Modal>
@@ -95,6 +101,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: 16,
     zIndex: 10,
+    alignItems: 'center',
   },
   modalTitle: {
     ...FONTS.h2,
@@ -111,5 +118,21 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     fontWeight: "bold",
     marginLeft: 8,
+    alignSelf: 'flex-start'
+  },
+  closeButton: {
+    position: 'absolute',
+    bottom: 16,
+    borderWidth: 2,
+    borderRadius: 8,
+    borderColor: COLORS.saffron,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  closeText: {
+    ...FONTS.h3,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontWeight: 'bold',
   }
 })

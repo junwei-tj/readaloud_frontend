@@ -98,19 +98,24 @@ export default function PlayAudioScreen({ navigation, route }) {
         })
       });
     } else {
-      // advance to next page
-      setPage(prev => {
-        const nextPage = bookPages[prev.pageNum].body;
-        const newSentences = nextPage.match(sentenceRegex);
-        Tts.speak(newSentences[0].trim()); 
-        return ({
-          sentenceNum: 1,
-          pageText: nextPage,
-          sentences: newSentences,
-          pageNum: prev.pageNum+1,
-        });
-      });
-      scrollRef.current.scrollTo({y: 0}); // scroll back to top
+      // advance to next page, if not last page
+      if (page.pageNum !== bookPages.length) {
+        goToPage(page.pageNum+1);
+      } else {
+        setIsPlaying(false);
+      }
+      // setPage(prev => {
+      //   const nextPage = bookPages[prev.pageNum].body;
+      //   const newSentences = nextPage.match(sentenceRegex);
+      //   Tts.speak(newSentences[0].trim()); 
+      //   return ({
+      //     sentenceNum: 1,
+      //     pageText: nextPage,
+      //     sentences: newSentences,
+      //     pageNum: prev.pageNum+1,
+      //   });
+      // });
+      // scrollRef.current.scrollTo({y: 0}); // scroll back to top
     }
   }
 
@@ -152,24 +157,35 @@ export default function PlayAudioScreen({ navigation, route }) {
     setBookmarksActive(true);
   }
 
-  // function to switch to a bookmark's page
-  const onBookmarkPressed = (bookmarkedPageNum) => {
+  // helper function to go to a specific page
+  // used in prev/next page buttons, bookmarked page, select page
+  const goToPage = (pageNumber) => {
+    /** 
+    * @param {number} pageNumber page number to go to
+    */
+
     if (isPlaying) {
       Tts.stop(); // stop current playback
     }
     setPage(prev => { // go to chosen page
-      const bookmarkedPage = bookPages[bookmarkedPageNum-1].body;
-      const newSentences = bookmarkedPage.match(sentenceRegex);
-      if (isPlaying) Tts.speak(newSentences[0].trim()); // play chosen page if user was alr playing 
+      const chosenPageText = bookPages[pageNumber-1].body;
+      const newSentences = chosenPageText.match(sentenceRegex);
+      if (!newSentences) setIsPlaying(false);
+      else if (isPlaying) Tts.speak(newSentences[0].trim()); // play chosen page if user was alr playing and if page is not blank
       return ({
         ...prev,
         sentenceNum: 1,
-        pageText: bookmarkedPage,
+        pageText: chosenPageText,
         sentences: newSentences,
-        pageNum: bookmarkedPageNum,
-      })
+        pageNum: pageNumber,
+      });
     });
     scrollRef.current.scrollTo({y: 0}); // scroll back to top
+  }
+
+  // function to switch to a bookmark's page
+  const onBookmarkPressed = (bookmarkedPageNum) => {
+    goToPage(bookmarkedPageNum);
     panelRef.current.hide();
   }
 
@@ -191,32 +207,21 @@ export default function PlayAudioScreen({ navigation, route }) {
     .catch((err) => console.log(err));
   }
 
-  // function to go to user's chosen page
-  const goToChosenPage = (pageToGo) => {
-    let chosen = Number.parseInt(pageToGo);
+  // function to handle user entering a specific page to go
+  const onPageInputSubmit = () => {
+    let chosen = Number.parseInt(chosenPage);
     if (chosen < 1 || chosen > bookPages.length) {
       setPageInputError(true);
     } else {
-      if (isPlaying) {
-        Tts.stop(); // stop current playback
-      }
-      setPage(prev => { // go to chosen page
-        const chosenPageText = bookPages[chosen-1].body;
-        const newSentences = chosenPageText.match(sentenceRegex);
-        if (isPlaying) Tts.speak(newSentences[0].trim()); // play chosen page if user was alr playing 
-        return ({
-          ...prev,
-          sentenceNum: 1,
-          pageText: chosenPageText,
-          sentences: newSentences,
-          pageNum: chosen,
-        });
-      });
-      scrollRef.current.scrollTo({y: 0}); // scroll back to top
+      goToPage(chosen);
       setShowPageModal(false);
       setPageInputError(false);
     }
   }
+
+  // functions to handle next/prev page
+  const onNextPagePressed = () => page.pageNum+1 <= bookPages.length ? goToPage(page.pageNum+1) : null;
+  const onPreviousPagePressed = () => page.pageNum-1 >= 1 ? goToPage(page.pageNum-1) : null;
 
   // change TTS options 
   useEffect(() => {
@@ -258,7 +263,7 @@ export default function PlayAudioScreen({ navigation, route }) {
         <View style={styles.bottomBar}>
           <View style={styles.pageBar}>
             <View style={styles.controlIcons}>   
-              <Pressable onPress={() => goToChosenPage(page.pageNum-1)} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
+              <Pressable onPress={onPreviousPagePressed} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
                 <FontAwesomeIcon icon={faArrowLeft} size={42} color={'black'}/>
               </Pressable>
             </View> 
@@ -266,7 +271,7 @@ export default function PlayAudioScreen({ navigation, route }) {
               <Text style={styles.pageNumText}>Pg {page.pageNum}</Text>        
             </Pressable>
             <View style={styles.controlIcons}>   
-              <Pressable onPress={() => goToChosenPage(page.pageNum+1)} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
+              <Pressable onPress={onNextPagePressed} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}]}>
                 <FontAwesomeIcon icon={faArrowRight} size={42} color={'black'}/>
               </Pressable>
             </View> 
@@ -326,7 +331,7 @@ export default function PlayAudioScreen({ navigation, route }) {
               />
               <Text style={styles.pageSelectionText}>{`/ ${bookPages.length}`}</Text>
             </View>
-            <Pressable onPress={() => goToChosenPage(chosenPage)} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.pageNumButton]}>
+            <Pressable onPress={onPageInputSubmit} style={({ pressed }) => [{ opacity: pressed ? 0.2 : 1}, styles.pageNumButton]}>
               <Text style={styles.pageNumText}>Go To Page</Text>        
             </Pressable>
           </View>
