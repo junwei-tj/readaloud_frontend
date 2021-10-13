@@ -112,7 +112,7 @@ export default function BookOptionsScreen({route, navigation}) {
     return (
       <View style={styles.bookmarkContainer}>
         <Text style={styles.bookmarkText}>{name}</Text>
-        <Text style={styles.bookmarkText}>{page+1}</Text>
+        <Text style={styles.bookmarkText}>{page}</Text>
       </View>
     )
   }
@@ -148,8 +148,11 @@ export default function BookOptionsScreen({route, navigation}) {
                             bookID: bookID, 
                             bookTitle: currentBookTitle, 
                             pages: pages, 
-                            lastProgress: lastProgress,
-                            bookmark: item
+                            lastProgress: {
+                              ...lastProgress,
+                              currentSentence: 1,
+                              currentPage: item.page,
+                            }
                           });
     }, 800);
   }
