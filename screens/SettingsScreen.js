@@ -6,7 +6,6 @@ import {
   Text,
   Button,
   View,
-  useColorScheme,
   Image,
   ScrollView,
 } from 'react-native';
@@ -17,20 +16,15 @@ import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {FONTS, COLORS} from '../constants/theme';
 
 export default function SettingsScreen({navigation}) {
-  const isDarkMode = useColorScheme() === 'dark';
 
-  // const backgroundStyle = {
-  //   backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  // };
+  const {setSignedIn, userInfo, setUserInfo, notifications} = useContext(UserContext);
 
-  const {setSignedIn, userInfo, setUserInfo, notifications} =
-    useContext(UserContext);
-
+  // Signs the user out
   const signOut = async () => {
     try {
       await GoogleSignin.signOut();
       setSignedIn(false);
-      setUserInfo(null); // Remember to remove the user from your app's state as well
+      setUserInfo(null);
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -44,15 +38,15 @@ export default function SettingsScreen({navigation}) {
     }
   };
 
-  //this function returns uri of default photo if userInfo is null
+  //Returns uri of default photo if userInfo is null
   function renderPhotoSource() {
     const photoSource = userInfo
       ? userInfo.user.photo
       : 'https://www.winhelponline.com/blog/wp-content/uploads/2017/12/user.png';
-    //console.log('defaultPhotoSource is: ' + photoSource);
     return photoSource;
   }
 
+  // Renders notifications by pushing Views with the notification text into the ScrollView 
   function renderNotifications() {
     if (notifications.notifications?.length) {
       let viewArray = [];
@@ -77,50 +71,25 @@ export default function SettingsScreen({navigation}) {
 
   return (
     <SafeAreaView style={styles.container}>
+
       <StatusBar barStyle="dark-content" />
-      {/* <View style={{alignItems: 'center'}}> */}
       <Image
         source={{uri: renderPhotoSource()}}
         style={styles.profilePic}
-
-        // source={{
-        //   uri: userInfo.user.photo,
-        // }}
-        // style={styles.profilePic}
       />
 
       <Text style={styles.name}>{userInfo ? userInfo.user.name : null} </Text>
-
       <Text style={styles.notificationTitleSyle}>New Notifications</Text>
 
       <ScrollView style={styles.outerNotificationContainer}>
-        
-        {notifications ? renderNotifications() : 
-        <View style={styles.innerNotificationContainer}>
-            <Text style={styles.notificationTextStyle}>No new notifications!</Text>
-        </View>}
-
-        {/* <Text style={styles.innerNotificationContainer}>
-          <Text style={styles.notificationTextStyle}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum
-            aliquet malesuada turpis quis ullamcorper.' + 'Donec pharetra
-          </Text>
-        </Text>
-
-        <Text style={styles.innerNotificationContainer}>
-          <Text style={styles.notificationTextStyle}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum
-            aliquet malesuada turpis quis ullamcorper.' + 'Donec pharetra
-          </Text>
-        </Text>
-
-        <Text style={styles.innerNotificationContainer}>
-          <Text style={styles.notificationTextStyle}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum
-            aliquet malesuada turpis quis ullamcorper.' + 'Donec pharetra
-          </Text>
-        </Text> */}
+        {
+          notifications ? renderNotifications() : 
+          <View style={styles.innerNotificationContainer}>
+              <Text style={styles.notificationTextStyle}>No new notifications!</Text>
+          </View>
+        }
       </ScrollView>
+
       <View style={styles.buttonContainer}>
         <Button
           style={styles.button}
@@ -129,7 +98,7 @@ export default function SettingsScreen({navigation}) {
           color="red"
         />
       </View>
-      {/* </View> */}
+
     </SafeAreaView>
   );
 }
@@ -138,29 +107,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
-    // justifyContent: 'flex-start',
-    // alignContent: 'center',
-    // alignItems: 'center',
     backgroundColor: COLORS.offblack,
   },
-
   icon: {
     marginTop: 100,
     color: COLORS.white,
   },
   name: {
     ...FONTS.h2,
-    color: COLORS.saffron,
+    color: COLORS.blue,
     fontWeight: 'bold',
     paddingTop: 10,
     alignSelf: 'center',
     paddingBottom: 20,
   },
-
   buttonContainer: {
     flexDirection: 'column',
   },
-
   button: {
     color: 'tomato',
   },

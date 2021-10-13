@@ -8,7 +8,6 @@ import {
   View,
   Alert,
   Modal,
-  useColorScheme,
   Pressable,
   ActivityIndicator,
   FlatList,
@@ -53,7 +52,6 @@ export default function HomeScreen({ navigation }) {
       useNativeDriver: true  // To make use of native driver for performance
     }
   ).start()
-
   // Next, interpolate beginning and end values (in this case 0 and 1)
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
@@ -62,7 +60,6 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     initialiseAllRequiredData();
-    //clearAllLocalStorage();
   }, [userInfo]);
 
   useFocusEffect( //Reload flatlist data on screen focus
@@ -75,7 +72,7 @@ export default function HomeScreen({ navigation }) {
     await loadAudiobookList();
   }
 
-  //Function to clear local storage, consider putting in Settings Screen
+  // Helper function to clear all local storage in the user's device
   async function clearAllLocalStorage() {
     try {
       let keys = [];
@@ -85,14 +82,16 @@ export default function HomeScreen({ navigation }) {
         }
         console.log("All local storage removed.");
     } catch (e) {
-      console.log(error.message);
       console.log("Local storage not cleared.")
     }
   }
 
-  // 1) Retrieval of audiobooks under user from the server
-  // 2) Retrieval of titles of saved audiobooks
-  // 3) Pushing to audiobookList, and marking if book is saved
+  /* 
+  * Retrieves the list of audiobooks and formats it for display
+  * 1) Retrieval of audiobooks under user from the server
+  * 2) Retrieval of titles of saved audiobooks from local storage
+  * 3) Pushing to audiobookList, while marking whether book is saved or unsaved
+  */
   async function loadAudiobookList(){
     try {
       // ===== Retrieval of audiobooks under user from the server =====
@@ -136,12 +135,16 @@ export default function HomeScreen({ navigation }) {
     }
   }
 
+  /*
+  * Function for downloading of an audiobook from the sever
+  * Brings up the modal to indicate downloading has started
+  */
   const downloadAudiobook = async (bookID) => {
     setModalVisible(true)
-    let audiobookText = await getAudiobookText(bookID); //to replace with bookID or "61516bd4fa5f2e4fe410d358"
+    let audiobookText = await getAudiobookText(bookID); 
     try {
       const jsonValue = JSON.stringify(audiobookText);
-      await AsyncStorage.setItem(bookID, jsonValue); //to replace with bookID
+      await AsyncStorage.setItem(bookID, jsonValue); 
       initialiseAllRequiredData();
       setTimeout(function() {
         setModalText("Audiobook has been downloaded!");
@@ -151,6 +154,7 @@ export default function HomeScreen({ navigation }) {
     }
   }
 
+  // Function to filter the displayed audiobooks based on user's entered search term
   const searchFilter = (text) => {
     if (text) {
       const newData = audiobookList.filter((item) => {
@@ -162,14 +166,17 @@ export default function HomeScreen({ navigation }) {
       setFilteredBooks(newData);
       setSearchTerm(text);
     }
-    else {
+    else { //Search input is empty, show all books
       setFilteredBooks(audiobookList);
       setSearchTerm(text);
     }
   }
 
+  /*
+  * Function called when a book is selected
+  * Navigates to the BookOptionsScreen with the book details
+  */
   const selectBook = async (bookID, bookTitle) => {
-    //Retrieve book's text
       let pages;
       let lastProgress;
       let bookObject;
@@ -177,7 +184,7 @@ export default function HomeScreen({ navigation }) {
         if (savedAudiobooks[i][0] == bookID){
           bookObject = JSON.parse(savedAudiobooks[i][1]);
           pages = bookObject[0];
-          lastProgress = await getAudiobookProgress(bookID, userInfo.user.id); //to replace with userID or "61516bd4fa5f2e4fe410d358"
+          lastProgress = await getAudiobookProgress(bookID, userInfo.user.id);
           break;
        }
       }
@@ -190,6 +197,7 @@ export default function HomeScreen({ navigation }) {
                           });
   }
 
+  // Renders the header with the greeting and the search bar
   function renderHeader(userInfo){
     return (
       <>
@@ -198,7 +206,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.whiteFont}>
               Good Day {""} 
             </Text>
-            <Text style={styles.saffronFont}>
+            <Text style={styles.blueFont}>
               {userInfo ? userInfo.user.name : null}
             </Text>
             <Text style={styles.whiteFont}>
@@ -217,8 +225,10 @@ export default function HomeScreen({ navigation }) {
     )
   }
 
+  //Renders the list of audiobooks for the user
   function renderBody(){
 
+    // Component for a saved book
     const SavedBook = ({ bookID, bookTitle, owned }) => (
       <TouchableOpacity style={styles.savedBook}
         onPress = {() => selectBook(bookID, bookTitle)} >
@@ -235,6 +245,7 @@ export default function HomeScreen({ navigation }) {
       </TouchableOpacity>
     )
 
+    // Component for an unsaved book
     const UnsavedBook = ({ bookID, bookTitle, owned }) => (
       <TouchableOpacity style={styles.unsavedBook}
         onPress = {() => Alert.alert(
@@ -272,6 +283,7 @@ export default function HomeScreen({ navigation }) {
       </TouchableOpacity>
     )
   
+    // Rendering of SavedBook or UnsavedBook
     const renderItem = ({ item }) => { 
       if (item.saved) {
         return <SavedBook bookID={item.bookID} bookTitle={item.bookTitle} owned={item.owned}/>
@@ -303,7 +315,7 @@ export default function HomeScreen({ navigation }) {
             { !filteredBooks ? 
               <ActivityIndicator
                 size = "large"
-                color = {COLORS.saffron}
+                color = {COLORS.blue}
                 /> : (filteredBooks?.length) ? 
                 
               <FlatList
@@ -317,7 +329,7 @@ export default function HomeScreen({ navigation }) {
               <View
               style= {{alignItems: "center", paddingTop: SIZES.height/3.8, paddingHorizontal: SIZES.padding2}}>
               <Text 
-                style={[{ textAlign: "center"}, styles.saffronFont]}>
+                style={[{ textAlign: "center"}, styles.blueFont]}>
                 No audiobooks!
               </Text>
               </View>
@@ -384,7 +396,7 @@ const styles= StyleSheet.create({
     borderWidth: 3,
     paddingLeft: SIZES.padding,
     marginHorizontal: 15,
-    borderColor: COLORS.saffron,
+    borderColor: COLORS.blue,
     borderRadius: 20,
     backgroundColor:COLORS.white,
   },
@@ -404,7 +416,7 @@ const styles= StyleSheet.create({
     marginVertical: 5, 
     marginHorizontal: 5, 
     color: COLORS.white, 
-    backgroundColor: COLORS.saffron, 
+    backgroundColor: COLORS.blue, 
     borderRadius: 10,
     flex: 0.5,
     height: SIZES.height / 3.5,
@@ -428,9 +440,9 @@ const styles= StyleSheet.create({
     ...FONTS.h2, 
     color: COLORS.white
   },
-  saffronFont:{
+  blueFont:{
     ...FONTS.h2, 
-    color: COLORS.saffron,
+    color: COLORS.blue,
   },
   centeredView: {
     flex: 1,

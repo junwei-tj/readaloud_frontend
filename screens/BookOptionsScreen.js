@@ -6,7 +6,6 @@ import {
   Alert,
   View,
   FlatList,
-  useColorScheme,
   StyleSheet,
   Modal,
   TextInput,
@@ -24,13 +23,12 @@ import {
 import {COLORS, SIZES, FONTS} from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { deleteAudiobookFile, updateAudiobookName, shareAudiobookFile } from '../components/APICaller';
-import SimpleModal from '../components/SimpleModal';
 import SlidingUpPanel from 'rn-sliding-up-panel';
 import {UserContext} from '../App';
 
 export default function BookOptionsScreen({route, navigation}) {
 
-  const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
+  const {userInfo} = useContext(UserContext);
   const { bookID, bookTitle, pages, lastProgress } = route.params; // Book selected retrieved from Home Screen
   const [currentBookTitle, setCurrentBookTitle] = useState(bookTitle);
 
@@ -38,16 +36,15 @@ export default function BookOptionsScreen({route, navigation}) {
   const panelRef = useRef(null);
   const [bookmarks, setBookmarks] = useState(lastProgress.bookmarks);
 
-  // States required for modal
+  // States required for modal to function
   const [option, setOption] = useState("");
   const [input, setInput] = useState();
   const [modalVisible, setModalVisible] = useState(false);
-  //const [modalText, setModalText] = useState("Downloading audiobook text...");
-  // const [isModalVisible, setIsModalVisible] = useState(false);
-  // const changeModalVisible = (bool) =>{
-  //   setIsModalVisible(bool);
-  // }
 
+  /*
+  * Renders modal when it is active
+  * Modal's content depends on whether user selected to rename or delete audiobook
+  * */
   function renderModal(){
     return (
       <Modal
@@ -128,7 +125,10 @@ export default function BookOptionsScreen({route, navigation}) {
     </Pressable>
   )
 
-  //COMPLETED
+  /*
+  * Redirects user to the PlayAudioScreen with the selected book details
+  * For starting of playback from user's last saved progress across all devices
+  */
   const playAudiobook = () => {
     navigation.navigate('PlayAudioScreen', 
                           {
@@ -139,7 +139,10 @@ export default function BookOptionsScreen({route, navigation}) {
                           });
   }
 
-  //COMPLETED
+  /*
+  * Redirects user to the PlayAudioScreen with the selected book details
+  * For starting of playback from previously saved bookmark
+  */
   const playAudiobookFromBookmark = (item) => {
     panelRef.current.hide();
     setTimeout(function() {
@@ -157,7 +160,7 @@ export default function BookOptionsScreen({route, navigation}) {
     }, 800);
   }
 
-  //COMPLETED
+  // For sharing of current audiobook with another user, sends desired user's email to the server
   const shareAudiobook = async(emailToShareTo) => {
     let response = await shareAudiobookFile(userInfo.user.id, bookID, emailToShareTo);
 
@@ -186,7 +189,7 @@ export default function BookOptionsScreen({route, navigation}) {
     }
   }
 
-  //COMPLETED
+  // For renaming of current audiobook, sends updated name to server
   const renameAudiobook = async(newName) => {
     let response = await updateAudiobookName(bookID, userInfo.user.id, newName);
     if (response){ //Rename successful
@@ -215,7 +218,12 @@ export default function BookOptionsScreen({route, navigation}) {
     }
   }
 
-  //COMPLETED
+  /*
+  * For deleting of current audiobook
+  * If deleting locally, only stored text in device's local storage deleted
+  * If deleting from server, also sends a DELETE request to server
+  * Automatically navigates back to HomeScreen if successful
+  */
   const deleteAudiobook = async() => {
     Alert.alert(
       bookTitle,
@@ -277,6 +285,7 @@ export default function BookOptionsScreen({route, navigation}) {
     );
   }
 
+  // Renders the top bar that holds the back button
   function renderTopBar(){
     return (
       <View style={styles.topBar}>
@@ -296,25 +305,10 @@ export default function BookOptionsScreen({route, navigation}) {
     )
   }
 
-  // function renderModal(){
-  //   return (
-  //     <Modal
-  //       transparent = {true}
-  //       animationType = 'fade'
-  //       visible = {isModalVisible}
-  //       onRequestClose = {() => changeModalVisible(false)}>
-  //         <SimpleModal
-  //           changeModalVisible={changeModalVisible}
-  //           isModalVisible={isModalVisible}
-  //           //setData = {setData}
-  //           renameAudiobook={renameAudiobook}
-  //           shareAudiobook={shareAudiobook}
-  //           bookTitle={bookTitle}
-  //           option={option} />
-  //     </Modal>
-  //   )
-  // }
-
+  /* 
+  * Renders the list of bookmarks for the current audiobooks
+  * Uses the SlidingUpPanel component
+  */
   function renderBookmarks(){
     return (
       <SlidingUpPanel 
@@ -333,6 +327,7 @@ export default function BookOptionsScreen({route, navigation}) {
     );
   }
 
+  // Renders the list of options avaiable for the current audiobook
   function renderOptionsMenu(){
     return (
       <View style={styles.optionsContainer}>
@@ -398,7 +393,6 @@ export default function BookOptionsScreen({route, navigation}) {
         <View style={styles.innerContainer}>
           <Text style={styles.innerContainerItems}>{currentBookTitle}</Text>
         </View>
-        {/* {renderModal()} */}
         {renderOptionsMenu()}
         {renderBookmarks()}
       </View>
@@ -430,7 +424,6 @@ const styles = StyleSheet.create({
     ...FONTS.body1,
     fontSize: 24,
     textAlign: 'center',
-    // paddingVertical: 16,
     paddingHorizontal: 20,
     color: COLORS.white,
   },
@@ -446,17 +439,11 @@ const styles = StyleSheet.create({
     height: '100%',
     width: '90%',
     alignSelf: 'center',
-    backgroundColor: COLORS.saffron,
+    backgroundColor: COLORS.blue,
     borderColor: 'white',
     borderWidth: 5,
     borderRadius: 20,
     overflow: 'hidden',
-  },
-  bookTitleStyle: {
-    padding: '10%',
-    fontSize: 24,
-    color: 'white',
-    alignItems: 'center',
   },
   optionsContainer: {
     height: '40%',
@@ -484,13 +471,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.saffron,
+    borderBottomColor: COLORS.blue,
   },
   container2: {
     height: 0.65*SIZES.height,
     width: '100%',
     backgroundColor: COLORS.offblack,
-    borderTopColor: COLORS.saffron,
+    borderTopColor: COLORS.blue,
     borderTopWidth: 1,
   },
   centeredView: {
@@ -516,14 +503,6 @@ const styles = StyleSheet.create({
   modalText: {
     marginBottom: 15,
     textAlign: "center"
-  },
-  button: {
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2
-  },
-  buttonClose: {
-    backgroundColor: "#2196F3",
   },
   input: {
     borderWidth: 1,
@@ -551,6 +530,5 @@ const styles = StyleSheet.create({
     elevation: 2,
     backgroundColor: COLORS.grey,
     opacity: 0.7,
-
   },
 });

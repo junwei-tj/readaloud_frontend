@@ -4,13 +4,16 @@ import { StyleSheet, View, Modal, Text, Platform, Pressable } from 'react-native
 import DropDownPicker from 'react-native-dropdown-picker';
 
 import { ANDROID_VOICES, IOS_VOICES, RATES, PITCHES } from '../constants/ttsControls';
-import { COLORS, SIZES, FONTS } from '../constants/theme';
+import { COLORS, FONTS } from '../constants/theme';
 
 export default function PlayOptionsModal({ options, setOptions, show, setShow }) {
+  
+  // State handlers for dropdown menus
   const [openVoices, setOpenVoices] = useState(false);
   const [openRates, setOpenRates] = useState(false);
   const [openPitches, setOpenPitches] = useState(false);
 
+  // TTS Options for Customisation
   const [voice, setVoice] = useState(options.voice);
   const [rate, setRate] = useState(options.rate);
   const [pitch, setPitch] = useState(options.pitch);
@@ -96,7 +99,7 @@ const styles = StyleSheet.create({
     width: '75%',
     height: '75%',
     borderRadius: 16,
-    borderColor: COLORS.saffron,
+    borderColor: COLORS.blue,
     borderWidth: 2,
     backgroundColor: COLORS.white,
     padding: 16,
@@ -125,7 +128,7 @@ const styles = StyleSheet.create({
     bottom: 16,
     borderWidth: 2,
     borderRadius: 8,
-    borderColor: COLORS.saffron,
+    borderColor: COLORS.blue,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },

@@ -4,7 +4,6 @@ import {
   StatusBar,
   StyleSheet,
   View,
-  useColorScheme,
 } from 'react-native';
 
 import {UserContext} from '../App';
@@ -12,11 +11,7 @@ import UploadButton from '../components/UploadButton';
 import { COLORS } from '../constants/theme';
 
 export default function PDFUploadScreen({navigation}) {
-  const isDarkMode = useColorScheme() === 'dark';
 
-  // const backgroundStyle = {
-  //   backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  // };
 
   const {setSignedIn, userInfo, setUserInfo} = useContext(UserContext);
 

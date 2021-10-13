@@ -134,7 +134,7 @@ export default function Login({ navigation }) {
         <FadeInView style={{width: 250, height: 150, backgroundColor: COLORS.offblack, paddingTop: 40}}>
           <ActivityIndicator
             size = "large"
-            color = {COLORS.saffron}
+            color = {COLORS.blue}
           />
           <Text style={styles.caption}>Loading, please wait......</Text>
         </FadeInView>

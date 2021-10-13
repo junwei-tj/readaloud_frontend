@@ -12,14 +12,21 @@ import {
   TextInput
 } from 'react-native';
 import { Dimensions, BackHandler, Platform } from 'react-native';
-
 import { StackActions } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faChevronCircleLeft, faPlayCircle, faPauseCircle, faStopCircle, faBookmark, faArrowLeft, faArrowRight, faCog } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faChevronCircleLeft, 
+  faPlayCircle, 
+  faPauseCircle, 
+  faStopCircle, 
+  faBookmark, 
+  faArrowLeft, 
+  faArrowRight, 
+  faCog } from '@fortawesome/free-solid-svg-icons';
 import Tts from 'react-native-tts';
 import SlidingUpPanel from 'rn-sliding-up-panel';
 
-import { COLORS, SIZES, FONTS } from '../constants/theme';
+import { COLORS, FONTS } from '../constants/theme';
 import { Bookmarks } from '../components/Bookmarks';
 import { UserContext } from '../App';
 import { addBookmark, removeBookmark, updateAudiobookProgress } from '../components/APICaller';
@@ -33,7 +40,7 @@ const windowHeight = Dimensions.get('window').height;
 
 export default function PlayAudioScreen({ navigation, route }) { 
   const bookID = route.params.bookID;
-  const bookPages = route.params.pages.page; // pages is an object with page (an array of the individual pages' text in a book), which is what I only need
+  const bookPages = route.params.pages.page; // pages is an object with page (an array of the individual pages' text in a book)
 
   // ========== States that track data ==========
   const [bookmarks, setBookmarks] = useState(route.params.lastProgress.bookmarks);
@@ -65,8 +72,11 @@ export default function PlayAudioScreen({ navigation, route }) {
   const panelRef = useRef(null);
   const scrollRef = useRef(null);
 
-  // function to handle exiting playback screen
-  // will need to stop TTS and save user progress
+  /* 
+  * Function to handle exiting of playback screen
+  * Stops the TTS and saves user progress back to the server
+  * Navigates back to HomeScreen
+  */
   const exitScreen = () => { 
     if (bookmarksActive) { return false }; // trigger sliding panel's (bookmarks' list) back action
 
@@ -85,7 +95,10 @@ export default function PlayAudioScreen({ navigation, route }) {
     return true; // other back actions (including system default) will not execute
   }
 
-  // eventlistener handler to highlight+play next sentence, and switch to next page if end of page is reached
+  /* 
+  * Eventlistener handler to highlight+play next sentence
+  * Switches to next page if end of page is reached
+  */
   const advance = () => { 
     // sentence and page numbers start from 1, so don't +1 for array indexing
     if (page.sentences[page.sentenceNum] !== undefined) {
@@ -98,28 +111,16 @@ export default function PlayAudioScreen({ navigation, route }) {
         })
       });
     } else {
-      // advance to next page, if not last page
+      // advance to next page, if user is not currently at the last page
       if (page.pageNum !== bookPages.length) {
         goToPage(page.pageNum+1);
       } else {
         setIsPlaying(false);
       }
-      // setPage(prev => {
-      //   const nextPage = bookPages[prev.pageNum].body;
-      //   const newSentences = nextPage.match(sentenceRegex);
-      //   Tts.speak(newSentences[0].trim()); 
-      //   return ({
-      //     sentenceNum: 1,
-      //     pageText: nextPage,
-      //     sentences: newSentences,
-      //     pageNum: prev.pageNum+1,
-      //   });
-      // });
-      // scrollRef.current.scrollTo({y: 0}); // scroll back to top
     }
   }
 
-  // add listeners
+  // Add required listeners
   useEffect(() => { 
     let ttsHandler = Tts.addEventListener('tts-finish', advance);
     // overwrite Android's default back behaviour
@@ -131,7 +132,7 @@ export default function PlayAudioScreen({ navigation, route }) {
     }
   }, [page, isPlaying, bookmarksActive]);
 
-  // function to handle play/pause
+  // Function to handle user selecting play/pause
   const onPlayPressed = () => {
     if (!isPlaying && page.sentences) { // if not previously playing, play audio
       Tts.speak(page.sentences[page.sentenceNum-1].trim()); // sentence number starts from 1
@@ -142,7 +143,10 @@ export default function PlayAudioScreen({ navigation, route }) {
     }
   }
 
-  // function for stop button. stops TTS and reset progress in page to the first sentence
+  /* 
+  * Function to handle user selecting stop
+  * Stops TTS and reset progress in page to the first sentence
+  */ 
   const onStopPressed = () => { 
     setIsPlaying(false);
     setPage(prev => ({
@@ -158,8 +162,10 @@ export default function PlayAudioScreen({ navigation, route }) {
     setBookmarksActive(true);
   }
 
-  // helper function to go to a specific page
-  // used in prev/next page buttons, bookmarked page, select page
+  /* 
+  * Helper function to go to a specific page
+  * used in prev/next page buttons, bookmarked page and select page
+  */
   const goToPage = (pageNumber) => {
     /** 
     * @param {number} pageNumber page number to go to
@@ -184,12 +190,13 @@ export default function PlayAudioScreen({ navigation, route }) {
     scrollRef.current.scrollTo({y: 0}); // scroll back to top
   }
 
-  // function to switch to a bookmark's page
+  // Function to switch to a bookmark's page when a bookmark is selected
   const onBookmarkPressed = (bookmarkedPageNum) => {
     goToPage(bookmarkedPageNum);
     panelRef.current.hide();
   }
 
+  // Function for adding of a new bookmark
   const addNewBookmark = (bookmarkName) => {
     addBookmark(userID, bookID, bookmarkName, page.pageNum)
     .then((data) => {
@@ -199,6 +206,7 @@ export default function PlayAudioScreen({ navigation, route }) {
     .catch((err) => console.log(err));
   }
 
+  // Function for removing of a old bookmark
   const removeOldBookmark = (bookmarkID) => {
     removeBookmark(userID, bookID, bookmarkID)
     .then((data) => {
@@ -208,7 +216,7 @@ export default function PlayAudioScreen({ navigation, route }) {
     .catch((err) => console.log(err));
   }
 
-  // function to handle user entering a specific page to go
+  // Function to handle user entering a specific page to jump to
   const onPageInputSubmit = () => {
     let chosen = Number.parseInt(chosenPage);
     if (chosen < 1 || chosen > bookPages.length) {
@@ -220,7 +228,7 @@ export default function PlayAudioScreen({ navigation, route }) {
     }
   }
 
-  // functions to handle next/prev page
+  // Functions to handle next/prev page
   const onNextPagePressed = () => page.pageNum+1 <= bookPages.length ? goToPage(page.pageNum+1) : null;
   const onPreviousPagePressed = () => page.pageNum-1 >= 1 ? goToPage(page.pageNum-1) : null;
 
@@ -256,7 +264,7 @@ export default function PlayAudioScreen({ navigation, route }) {
             text={page.sentences}
             currSentence={page.sentenceNum}
             style={styles.textStyle}
-            highlightStyle={{ backgroundColor: COLORS.saffron }}
+            highlightStyle={{ backgroundColor: COLORS.blue }}
           />
         </ScrollView>
 
@@ -371,7 +379,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     flexDirection: 'row',
     alignItems: 'center',        
-    backgroundColor: COLORS.saffron,
+    backgroundColor: COLORS.blue,
   },
   backIcon: {
     marginRight: 16,
@@ -399,7 +407,7 @@ const styles = StyleSheet.create({
   bottomBar: {
     height: '20%',
     alignItems: 'center',
-    backgroundColor: COLORS.saffron,
+    backgroundColor: COLORS.blue,
     paddingVertical: 8,
   },
   pageBar: {
@@ -460,7 +468,7 @@ const styles = StyleSheet.create({
   pageModal: {
     width: 256,
     height: 128,
-    backgroundColor: COLORS.saffron,
+    backgroundColor: COLORS.blue,
     justifyContent: 'center',
     alignItems: 'center',
   },

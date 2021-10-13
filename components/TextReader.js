@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text } from 'react-native';
 
-// component that highlights a sentence within an array of sentences
+// Component that highlights a sentence within an array of sentences
 export default function TextReader({ text, currSentence, style, highlightStyle }) {
   /**
    * @param {array} text an array of sentences
@@ -10,8 +10,8 @@ export default function TextReader({ text, currSentence, style, highlightStyle }
    * @param {object} highlightStyle style to apply for the highlighted sentence
    */
 
-  // after every sentence, need to add a space
-  // need a separate Text for adding a space to prevent it from being highlighted
+  // A space is added after every sentence
+  // Separate Text component for adding a space to prevent it from being highlighted
   return (
     text !== null ? (
       <Text style={style}>
@@ -29,7 +29,7 @@ export default function TextReader({ text, currSentence, style, highlightStyle }
             )
         })}
       </Text>
-    ) : (
+    ) : ( //For rendering of pages that have no text
       <Text style={[style, {textAlign: 'center', textAlignVertical: 'center', fontStyle: 'italic'}]}>
         This page is blank. Please change pages to continue playing.
       </Text>

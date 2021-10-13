@@ -65,7 +65,7 @@ export default function App() {
       })
     });
 
-    // check if user is signed in
+    // Function to check is user is currently signed in and gets current user information if so
     const isSignedIn = async () => {
       const isSignedIn = await GoogleSignin.isSignedIn();
       if (isSignedIn) {
@@ -100,7 +100,6 @@ export default function App() {
                 let iconName;
 
                 if (route.name === 'Home') {
-                  // wk 0030 29Sep21 update: original code iconName = focused ? faHome : 'home';
                   iconName = faHome;
                 } else if (route.name === 'PDFUpload') {
                   iconName = faPlusCircle;
