@@ -133,12 +133,13 @@ export default function PlayAudioScreen({ navigation, route }) {
 
   // function to handle play/pause
   const onPlayPressed = () => {
-    if (!isPlaying) { // if not previously playing, play audio
+    if (!isPlaying && page.sentences) { // if not previously playing, play audio
       Tts.speak(page.sentences[page.sentenceNum-1].trim()); // sentence number starts from 1
+      setIsPlaying(true); // do this at the end because updating state has a lag
     } else { // if previously playing audio, stop audio
       Tts.stop();
+      setIsPlaying(false); // do this at the end because updating state has a lag
     }
-    setIsPlaying(!isPlaying); // do this at the end because updating state has a lag
   }
 
   // function for stop button. stops TTS and reset progress in page to the first sentence
