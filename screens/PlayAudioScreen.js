@@ -327,6 +327,7 @@ export default function PlayAudioScreen({ navigation, route }) {
         transparent={true}
         visible={showPageModal}
         onRequestClose={() => setShowPageModal(false)}
+        onShow={() => setChosenPage(page.pageNum)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.pageModal}>
