@@ -4,7 +4,6 @@ import {
   StatusBar,
   Text,
   View,
-  useColorScheme,
   StyleSheet,
   Image,
   Animated,
@@ -20,50 +19,18 @@ import { UserContext } from '../App';
 import { loginUser } from '../components/APICaller';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.offblack
-  },
-  logo: {
-    height: '25%',
-    resizeMode: 'contain',
-  },
-  title: {
-    // fontFamily: 'sans-serif-light',
-    // fontWeight: 'bold',
-    // fontSize: 48,
-    ...Platform.select({
-      ios: { fontFamily: 'helvetica',fontWeight: 'bold',fontSize: 48, color: COLORS.white}, 
-      android: { fontFamily: 'sans-serif-light',fontWeight: 'bold',fontSize: 48, color: COLORS.white}
- })
-  },
-  caption: {
-    fontStyle: 'italic',
-    fontSize: 24,
-    color: COLORS.white
-  },
-  signInButton: { 
-    width: '60%', 
-    height: 48,
-    marginTop: 100, 
-  }
-});
-
 GoogleSignin.configure(); // mandatory to call this method before attempting to call signIn() and signInSilently()
 
 export default function Login({ navigation }) {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  // const backgroundStyle = {
-  //   backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  // };
-
   const { setSignedIn, setUserInfo, setNotifications } = useContext(UserContext);
   const [loadSplash, setLoadSplash] = useState(false);
+  const [initial, setInitial] = useState(true);
+
+  useEffect(() => {
+    setTimeout(function() {
+      setInitial(false);
+    }, 1500);
+  }, [])
 
   const signIn = async () => {
     try {
@@ -138,13 +105,50 @@ export default function Login({ navigation }) {
           />
           <Text style={styles.caption}>Loading, please wait......</Text>
         </FadeInView>
-        <GoogleSigninButton
-          style={styles.signInButton}
-          size={GoogleSigninButton.Size.Wide}
-          color={GoogleSigninButton.Color.Dark}
-          onPress={() => signIn(navigation)}
-        />        
+        {initial ? 
+          <ActivityIndicator
+            size = "large"
+            color = {COLORS.blue}
+            style={styles.signInButton}
+          /> : 
+          <GoogleSigninButton
+            style={styles.signInButton}
+            size={GoogleSigninButton.Size.Wide}
+            color={GoogleSigninButton.Color.Dark}
+            onPress={() => signIn(navigation)}
+          />    
+        }    
       </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.offblack
+  },
+  logo: {
+    height: '25%',
+    resizeMode: 'contain',
+  },
+  title: {
+    ...Platform.select({
+      ios: { fontFamily: 'helvetica',fontWeight: 'bold',fontSize: 48, color: COLORS.white}, 
+      android: { fontFamily: 'sans-serif-light',fontWeight: 'bold',fontSize: 48, color: COLORS.white}
+ })
+  },
+  caption: {
+    fontStyle: 'italic',
+    fontSize: 24,
+    color: COLORS.white
+  },
+  signInButton: { 
+    width: '60%', 
+    height: 48,
+    marginTop: 100, 
+  }
+});
